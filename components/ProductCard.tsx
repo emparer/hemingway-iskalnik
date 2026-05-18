@@ -23,9 +23,22 @@ export default function ProductCard({ item, searchParams = {} }: Props) {
     prod.Location?.RegionName,
   ].filter(Boolean).join(" / ");
 
-  const stars = "★".repeat(Math.min(cat, 5));
+  const stars = cat > 0 ? `${cat} ${cat === 1 ? "zvezdica" : cat === 2 ? "zvezdici" : "zvezdic"}` : "";
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
+
+  let tourType = "Package";
+  if (searchParams.type === "hotel") {
+    tourType = "Hotel";
+  } else if (searchParams.type === "trips") {
+    tourType = "Bus";
+  } else {
+    const serviceKeys = Object.keys(item.ServiceTypes || {});
+    const roomKeys = Object.keys(item.RoomTypes || {});
+    if (serviceKeys.length === 1 && serviceKeys[0] === "TO" && roomKeys.includes("OU")) {
+      tourType = "Flight";
+    }
+  }
 
   const qs = new URLSearchParams({
     ...searchParams,
@@ -35,24 +48,27 @@ export default function ProductCard({ item, searchParams = {} }: Props) {
   return (
     <Link href={`/product/${giata}${qs ? "?" + qs : ""}`} style={{ textDecoration: "none", display: "contents" }}>
       <article className="card">
-        {img ? (
-          <img
-            className="card-img"
-            src={img}
-            alt={name}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        ) : (
-          <div className="card-img-placeholder">📷 Ni slike</div>
-        )}
+        <div className="card-media">
+          <div className="card-badge">{tourType}</div>
+          {img ? (
+            <img
+              className="card-img"
+              src={img}
+              alt={name}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="card-img-placeholder">Brez slike</div>
+          )}
+        </div>
 
         <div className="card-body">
           <div className="card-title">{name}</div>
 
-          {loc && <div className="card-location">📍 {loc}</div>}
+          {loc && <div className="card-location">{loc}</div>}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {stars && <span className="card-stars">{stars}</span>}
+          <div className="card-meta">
+            {stars && <span className="card-chip">{stars}</span>}
             {rating > 0 && (
               <span className="rating-badge" style={{ background: ratingBg, color: ratingColor }}>
                 {rating}/10
@@ -65,7 +81,7 @@ export default function ProductCard({ item, searchParams = {} }: Props) {
               <small>od </small>
               {Number(price).toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}
             </div>
-            <span className="btn" style={{ padding: "7px 14px", fontSize: 12 }}>
+            <span className="btn card-cta" style={{ padding: "10px 14px", fontSize: 12 }}>
               Prikaži ponudbo
             </span>
           </div>

@@ -19,8 +19,8 @@ export default async function CheckoutPage({
   const total = offerPrice + registrationFee;
 
   return (
-    <main className="container">
-      {verify.usingMock && <p className="mock-notice">⚠ Mock mode: {verify.info}</p>}
+    <main className="container page-shell">
+      {verify.usingMock && <p className="mock-notice">Mock mode: {verify.info}</p>}
 
       <form className="checkout-grid" action="/api/checkout" method="post">
         <input type="hidden" name="tourOperator" value={tourOperator} />
@@ -88,7 +88,7 @@ export default async function CheckoutPage({
 
         <aside className="offer-box">
           <h2>LETALSKI PREVOZ TURCIJA</h2>
-          <p className="location">📍 Antalya / Turčija / Antalya z okolico</p>
+          <p className="location">Antalya / Turčija / Antalya z okolico</p>
           <div className="summary-line"><span>Odhod na destinacijo</span><b>28.05.2026</b></div>
           <div className="summary-line"><span>Odhod iz destinacije</span><b>04.06.2026</b></div>
           <div className="summary-line"><span>Trajanje</span><b>7 dni</b></div>

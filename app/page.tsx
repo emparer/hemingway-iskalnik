@@ -16,6 +16,9 @@ export default async function Home({
     type:        sp.type        || "pauschal",
     query:       sp.query       || "Turčija",
     RegionGroup: sp.RegionGroup || "724",
+    Region:      sp.Region,
+    Location:    sp.Location,
+    GiataID:     sp.GiataID,
     StartDate:   sp.StartDate,
     EndDate:     sp.EndDate,
     AdultCount:  sp.AdultCount,
@@ -52,7 +55,7 @@ export default async function Home({
   }
 
   return (
-    <main className="container">
+    <main className="container page-shell">
       <SearchBox
         defaultQuery={sp.query || "Turčija"}
         defaultRegionGroup={sp.RegionGroup || "724"}
@@ -63,20 +66,26 @@ export default async function Home({
       />
 
       {data.usingMock && (
-        <p className="mock-notice">⚠ Mock mode — ORS API nedosegljiv: {data.error}</p>
+        <p className="mock-notice">Mock mode. ORS API ni dosegljiv: {data.error}</p>
       )}
 
       <div className="layout">
         <Filters data={data} />
 
-        <section>
+        <section className="results-panel">
           <div className="topbar">
-            <div className="topbar-count">Najdenih {count} ponudb.</div>
+            <div className="topbar-copy">
+              <p className="eyebrow" style={{ color: "var(--c)", background: "rgba(139, 53, 63, 0.08)", marginBottom: 12 }}>
+                Selected offers
+              </p>
+              <h2>Ponudbe za sodoben izbor poti.</h2>
+              <p className="topbar-count">Najdenih {count} ponudb. Razvrstite jih po ceni, oceni ali kategoriji.</p>
+            </div>
             <div className="sort-btns">
-              <Link className="btn-light" href={sortUrl("Price", "asc")}>↑ Cena</Link>
-              <Link className="btn-light" href={sortUrl("Price", "desc")}>↓ Cena</Link>
-              <Link className="btn-light" href={sortUrl("OverallRating", "desc")}>♥ Ocena</Link>
-              <Link className="btn-light" href={sortUrl("Category", "desc")}>★ Kategorija</Link>
+              <Link className="btn-light" href={sortUrl("Price", "asc")}>Cena naraščajoče</Link>
+              <Link className="btn-light" href={sortUrl("Price", "desc")}>Cena padajoče</Link>
+              <Link className="btn-light" href={sortUrl("OverallRating", "desc")}>Najboljše ocene</Link>
+              <Link className="btn-light" href={sortUrl("Category", "desc")}>Najvišja kategorija</Link>
             </div>
           </div>
 

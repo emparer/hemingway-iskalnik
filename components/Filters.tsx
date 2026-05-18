@@ -76,10 +76,26 @@ export default function Filters({ data }: Props) {
   ];
 
   const visibleCities = showAllCities ? cities : cities.slice(0, 8);
+  const resetParams = new URLSearchParams();
+
+  ["type", "query", "RegionGroup", "StartDate", "EndDate", "AdultCount", "Duration"].forEach(key => {
+    const value = sp.get(key);
+    if (value) resetParams.set(key, value);
+  });
 
   return (
     <aside className="sidebar">
-      <h3>Filtri</h3>
+      <div className="sidebar-header">
+        <h3>Filtri</h3>
+        <button
+          type="button"
+          className="btn-light"
+          onClick={() => router.push(`?${resetParams.toString()}`)}
+          style={{ padding: "10px 14px", fontSize: 12 }}
+        >
+          Ponastavi
+        </button>
+      </div>
 
       <div className="filter-group">
         <div className="filter-title">Cena (€)</div>
@@ -174,10 +190,10 @@ export default function Filters({ data }: Props) {
           {cities.length > 8 && (
             <button
               type="button"
+              className="filter-more-btn"
               onClick={() => setShowAllCities(v => !v)}
-              style={{ background: "none", border: "none", color: "var(--c)", fontSize: 12, cursor: "pointer", padding: "4px 0", fontWeight: 600 }}
             >
-              {showAllCities ? "Prikaži manj ▲" : `Prikaži več (${cities.length - 8}) ▼`}
+              {showAllCities ? "Prikaži manj" : `Prikaži več (${cities.length - 8})`}
             </button>
           )}
         </div>
