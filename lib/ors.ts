@@ -28,8 +28,8 @@ function buildSearchPayload(params: SearchParams) {
     StartDate: params.StartDate || "19.05.2026",
     EndDate: params.EndDate || "18.05.2027",
     AdultCount: toNumberIfPossible(params.AdultCount || 2),
-    Count: toNumberIfPossible(params.PageSize || params.Count || 12),
     Page: toNumberIfPossible(params.Page || 0),
+    Count: toNumberIfPossible(params.PageSize || params.Count || 12),
   };
 
   if (params.TourOperator) payload.TourOperator = params.TourOperator;
@@ -38,28 +38,38 @@ function buildSearchPayload(params: SearchParams) {
   if (params.Location) payload.Location = toNumberIfPossible(params.Location);
   if (params.GiataID) payload.GiataID = toNumberIfPossible(params.GiataID);
   if (params.Duration) payload.Duration = params.Duration;
-  if (params.ServiceType) payload.ServiceType = params.ServiceType;
-  if (params.MinimumCategory) payload.MinimumCategory = toNumberIfPossible(params.MinimumCategory);
   if (params.ProductName) payload.ProductName = params.ProductName;
 
-  const filterKeys = [
-    "Filter[Category][]",
-    "Filter[ServiceType][]",
-    "Filter[RoomType][]",
-    "Filter[Region][]",
-    "Filter[Location][]",
-    "Filter[StartDate][]",
-    "Filter[Duration][]",
-    "RFilter[Price]",
-  ];
-
-  for (const key of filterKeys) {
-    if (params[key]) payload[key] = params[key];
+  // Filters (Nested)
+  const filters: Record<string, any> = {};
+  
+  if (params["Filter[Category][]"]) {
+    const cats = Array.isArray(params["Filter[Category][]"]) ? params["Filter[Category][]"] : [params["Filter[Category][]"]];
+    filters.Category = cats.map(Number);
+  }
+  if (params["Filter[ServiceType][]"]) {
+    filters.ServiceType = Array.isArray(params["Filter[ServiceType][]"]) ? params["Filter[ServiceType][]"] : [params["Filter[ServiceType][]"]];
+  }
+  if (params["Filter[RoomType][]"]) {
+    filters.RoomType = Array.isArray(params["Filter[RoomType][]"]) ? params["Filter[RoomType][]"] : [params["Filter[RoomType][]"]];
+  }
+  if (params["Filter[Region][]"]) {
+    filters.Region = Array.isArray(params["Filter[Region][]"]) ? params["Filter[Region][]"] : [params["Filter[Region][]"]];
+  }
+  if (params["Filter[Location][]"]) {
+    filters.Location = Array.isArray(params["Filter[Location][]"]) ? params["Filter[Location][]"] : [params["Filter[Location][]"]];
+  }
+  
+  if (Object.keys(filters).length > 0) {
+    payload.Filter = filters;
   }
 
+  // Sorting
   if (params.SortField) {
-    payload.SortField = params.SortField;
-    payload.SortDir = params.SortDir || "asc";
+    const apiField = params.SortField;
+    payload.Sort = [{
+      [apiField]: params.SortDir || "asc"
+    }];
   }
 
   return cleanObject(payload);
@@ -95,7 +105,7 @@ export async function searchProducts(params: SearchParams) {
   try {
     return await orsPost(`/search/${type}/products`, buildSearchPayload(params));
   } catch (e: any) {
-    return { ...mockSearchResults(), usingMock: true, error: e.message || String(e) };
+    return { ...dynamicMockSearchResults(params), usingMock: true, error: e.message || String(e) };
   }
 }
 
@@ -256,24 +266,60 @@ export async function registerOffer(
   return data;
 }
 
-function mockSearchResults() {
-  const items = [
-    { name: "Bertran Park", giata: "6222", img: "https://cdn.ors.si/medium/6222_s.jpg", price: 659, cat: 4, rating: 10, city: "Lloret de Mar", region: "Costa Brava" },
-    { name: "Aqua Aquamarina & Spa", giata: "6277", img: "https://cdn.ors.si/medium/6277_s.jpg", price: 699, cat: 4, rating: 9, city: "Santa Susanna", region: "Costa Brava" },
-    { name: "Riviera", giata: "49270", img: "https://cdn.ors.si/medium/49270_s.jpg", price: 679, cat: 4, rating: 6, city: "Santa Susanna", region: "Costa Brava" },
-    { name: "Rosa Nàutica", giata: "6237", img: "https://cdn.ors.si/medium/6237_s.jpg", price: 739, cat: 3, rating: 10, city: "Malgrat de Mar", region: "Costa Brava" },
-    { name: "Aqua Promenade & Spa", giata: "19489", img: "https://cdn.ors.si/medium/19489_s.jpg", price: 699, cat: 4, rating: 9, city: "Pineda de Mar", region: "Costa Brava" },
-    { name: "Reymar Playa", giata: "51358", img: "https://cdn.ors.si/medium/51358_s.jpg", price: 759, cat: 3, rating: 8, city: "Malgrat de Mar", region: "Costa Brava" },
-    { name: "Hotel Reymar", giata: "6283", img: "https://cdn.ors.si/medium/6283_s.jpg", price: 759, cat: 3, rating: 5, city: "Malgrat de Mar", region: "Costa Brava" },
-    { name: "Alegria Fenals Mar", giata: "21171", img: "https://cdn.ors.si/medium/21171_s.jpg", price: 769, cat: 3, rating: 5, city: "Lloret de Mar", region: "Costa Brava" },
-    { name: "Fenals Garden", giata: "41676", img: "https://cdn.ors.si/medium/41676_s.jpg", price: 769, cat: 4, rating: 4, city: "Lloret de Mar", region: "Costa Brava" },
+function dynamicMockSearchResults(params: SearchParams) {
+  const allItems = [
+    { name: "Bertran Park", giata: "6222", img: "https://cdn.ors.si/medium/6222_s.jpg", price: 659, cat: 4, rating: 10, city: "Lloret de Mar", region: "Costa Brava", locId: "2485", regId: "704" },
+    { name: "Aqua Aquamarina & Spa", giata: "6277", img: "https://cdn.ors.si/medium/6277_s.jpg", price: 699, cat: 4, rating: 9, city: "Santa Susanna", region: "Costa Brava", locId: "10782", regId: "704" },
+    { name: "Riviera", giata: "49270", img: "https://cdn.ors.si/medium/49270_s.jpg", price: 679, cat: 4, rating: 6, city: "Santa Susanna", region: "Costa Brava", locId: "10782", regId: "704" },
+    { name: "Rosa Nàutica", giata: "6237", img: "https://cdn.ors.si/medium/6237_s.jpg", price: 739, cat: 3, rating: 10, city: "Malgrat de Mar", region: "Costa Brava", locId: "2488", regId: "704" },
+    { name: "Aqua Promenade & Spa", giata: "19489", img: "https://cdn.ors.si/medium/19489_s.jpg", price: 699, cat: 4, rating: 9, city: "Pineda de Mar", region: "Costa Brava", locId: "2490", regId: "704" },
+    { name: "Reymar Playa", giata: "51358", img: "https://cdn.ors.si/medium/51358_s.jpg", price: 759, cat: 3, rating: 8, city: "Malgrat de Mar", region: "Costa Brava", locId: "2488", regId: "704" },
+    { name: "Hotel Reymar", giata: "6283", img: "https://cdn.ors.si/medium/6283_s.jpg", price: 759, cat: 3, rating: 5, city: "Malgrat de Mar", region: "Costa Brava", locId: "2488", regId: "704" },
+    { name: "Alegria Fenals Mar", giata: "21171", img: "https://cdn.ors.si/medium/21171_s.jpg", price: 769, cat: 3, rating: 5, city: "Lloret de Mar", region: "Costa Brava", locId: "2485", regId: "704" },
+    { name: "Fenals Garden", giata: "41676", img: "https://cdn.ors.si/medium/41676_s.jpg", price: 769, cat: 4, rating: 4, city: "Lloret de Mar", region: "Costa Brava", locId: "2485", regId: "704" },
   ];
 
+  let filtered = [...allItems];
+
+  // Filtering
+  const cats = params["Filter[Category][]"] ? (Array.isArray(params["Filter[Category][]"]) ? params["Filter[Category][]"] : [params["Filter[Category][]"]]).map(Number) : [];
+  if (cats.length > 0) {
+    filtered = filtered.filter(i => cats.includes(i.cat));
+  }
+
+  const locs = params["Filter[Location][]"] ? (Array.isArray(params["Filter[Location][]"]) ? params["Filter[Location][]"] : [params["Filter[Location][]"]]) : [];
+  if (locs.length > 0) {
+    filtered = filtered.filter(i => locs.includes(i.locId));
+  }
+
+  const regs = params["Filter[Region][]"] ? (Array.isArray(params["Filter[Region][]"]) ? params["Filter[Region][]"] : [params["Filter[Region][]"]]) : [];
+  if (regs.length > 0) {
+    filtered = filtered.filter(i => regs.includes(i.regId));
+  }
+
+  // Sorting
+  const sortField = params.SortField || "Price";
+  const sortDir = params.SortDir || "asc";
+  const mult = sortDir === "asc" ? 1 : -1;
+
+  filtered.sort((a, b) => {
+    if (sortField === "Price") return (a.price - b.price) * mult;
+    if (sortField === "OverallRating") return (a.rating - b.rating) * mult;
+    if (sortField === "Category") return (a.cat - b.cat) * mult;
+    return 0;
+  });
+
+  // Pagination
+  const page = toNumberIfPossible(params.Page || 0) as number;
+  const perPage = toNumberIfPossible(params.PageSize || params.Count || 12) as number;
+  const count = filtered.length;
+  const paged = filtered.slice(page * perPage, (page + 1) * perPage);
+
   return {
-    Count: items.length,
-    PerPage: 12,
+    Count: count,
+    PerPage: perPage,
     RFilters: { Price: { Minimum: 369, Maximum: 1199 } },
-    Results: items.map(i => ({
+    Results: paged.map(i => ({
       TourOperator: "PALH",
       MinPrice: i.price,
       MinimumPrice: i.price,
