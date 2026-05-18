@@ -49,3 +49,5 @@ Icon?
 # misc
 .cache/
 coverage/
+
+scraped/
