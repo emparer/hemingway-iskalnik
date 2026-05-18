@@ -1,9 +1,11 @@
 //app/page.tsx
+
 import SearchBox from "@/components/SearchBox";
 import ProductCard from "@/components/ProductCard";
 import Filters from "@/components/Filters";
 import { searchProducts } from "@/lib/ors";
 import Link from "next/link";
+import Header from "@/components/Header";
 
 export default async function Home({
   searchParams,
@@ -55,6 +57,8 @@ export default async function Home({
   }
 
   return (
+  
+
     <main className="container page-shell">
       <SearchBox
         defaultQuery={sp.query || "Turčija"}
@@ -114,6 +118,7 @@ export default async function Home({
           )}
         </section>
       </div>
-    </main>
+      </main>
+  
   );
 }

@@ -92,65 +92,55 @@ export default async function ProductPage({
     thumb: string;
   };
 
-  function collectGalleryPictures(...sources: any[]) {
-    const urls: string[] = [];
+  function collectGalleryPictures(infoData: any, prod: any) {
+    const pictures: GalleryPicture[] = [];
 
-    function walk(value: any) {
-      if (!value) return;
+    // Best source: ORS product info Images array
+    if (Array.isArray(infoData?.Images)) {
+      for (const img of infoData.Images) {
+        const full = img.URLFull || img.Full || img.URL;
+        const thumb = img.Thumb || img.Thumbnail || img.URL || full;
 
-      if (typeof value === "string") {
         if (
-          value.startsWith("http") &&
-          /\.(jpg|jpeg|png|webp)(\?|$)/i.test(value) &&
-          !value.includes("no-image")
+          full &&
+          typeof full === "string" &&
+          full.startsWith("http") &&
+          !full.includes("no-image")
         ) {
-          urls.push(value);
+          pictures.push({
+            full,
+            thumb: thumb || full,
+          });
         }
-        return;
-      }
-
-      if (Array.isArray(value)) {
-        value.forEach(walk);
-        return;
-      }
-
-      if (typeof value === "object") {
-        Object.values(value).forEach(walk);
       }
     }
 
-    sources.forEach(walk);
+    // Fallback only if there are no gallery images
+    if (!pictures.length) {
+      const full =
+        infoData?.Product?.Picture?.Full ||
+        prod?.Picture?.Large ||
+        prod?.Picture?.Full;
 
-    const fullUrls = urls.filter((url) =>
-      url.includes("_f1024x1024.") ||
-      url.includes("/large/") ||
-      url.includes("_image_1024")
-    );
+      const thumb =
+        infoData?.Product?.Picture?.Thumbnail ||
+        prod?.Picture?.Thumbnail ||
+        full;
 
-    const pictures: GalleryPicture[] = fullUrls.map((full) => {
-      let thumb = full;
-
-      if (full.includes("_f1024x1024.")) {
-        thumb = full.replace("_f1024x1024.", "_c150x150.");
-      } else if (full.includes("/large/")) {
-        thumb = full.replace("/large/", "/small/");
+      if (full) {
+        pictures.push({
+          full,
+          thumb,
+        });
       }
-
-      return { full, thumb };
-    });
+    }
 
     return Array.from(
       new Map(pictures.map((pic) => [pic.full, pic])).values()
     );
   }
 
-  const pictures = collectGalleryPictures(
-    infoData,
-    prod.Pictures,
-    prod.Images,
-    prod.Gallery,
-    prod.Picture?.Large
-  );
+  const pictures = collectGalleryPictures(infoData, prod);
 
   console.log("========== FINAL GALLERY PICTURES ==========");
   console.dir(pictures, { depth: null });
