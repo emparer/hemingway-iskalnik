@@ -1,8 +1,20 @@
 //app/product/[giataId]/page.tsx
 import SearchBox from "@/components/SearchBox";
 import GalleryClient from "@/components/GalleryClient";
-import { searchDates } from "@/lib/ors";
+import { searchDates, searchProducts, getProductInfo } from "@/lib/ors";
 import Link from "next/link";
+
+function getFirstProduct(productData: any, giataId: string) {
+  const results = productData.Results || [];
+
+  const item =
+    results.find((r: any) => {
+      const prod = r.Product || r;
+      return String(prod.GiataID || r.GiataID || "") === String(giataId);
+    }) || results[0];
+
+  return item?.Product || item || {};
+}
 
 export default async function ProductPage({
   params,
@@ -14,18 +26,56 @@ export default async function ProductPage({
   const { giataId } = await params;
   const sp = await searchParams;
 
-  const data = await searchDates({
-    type:         sp.type || "pauschal",
-    GiataID:      giataId,
+  const productData = await searchProducts({
+    type: sp.type || "pauschal",
+    GiataID: giataId,
     TourOperator: sp.TourOperator || "",
-    RegionGroup:  sp.RegionGroup || "724",
-    StartDate:    sp.StartDate || "19.05.2026",
-    EndDate:      sp.EndDate || "18.05.2027",
-    AdultCount:   sp.AdultCount || 2,
+    RegionGroup: sp.RegionGroup || "724",
+    StartDate: sp.StartDate || "19.05.2026",
+    EndDate: sp.EndDate || "18.05.2027",
+    AdultCount: sp.AdultCount || 2,
+    Count: 1,
+    PageSize: 1,
+    Page: 0,
   });
 
-  const prod    = data.Results?.[0]?.Product || {};
-  const dates   = data.Dates || [];
+  const dateData = await searchDates({
+    type: sp.type || "pauschal",
+    GiataID: giataId,
+    TourOperator: sp.TourOperator || "",
+    RegionGroup: sp.RegionGroup || "724",
+    StartDate: sp.StartDate || "19.05.2026",
+    EndDate: sp.EndDate || "18.05.2027",
+    AdultCount: sp.AdultCount || 2,
+  });
+
+  let infoData: any = {};
+
+  try {
+    infoData = await getProductInfo({
+      GiataID: giataId,
+      TourOperator: sp.TourOperator || "PALM",
+      StartDate: sp.StartDate || "19.05.2026",
+    });
+  } catch (e: any) {
+    console.error("[product] getProductInfo failed:", e.message || e);
+  }
+
+  const prod = getFirstProduct(productData, giataId);
+
+  console.log("========== PRODUCT DEBUG ==========");
+  console.log("GiataID:", giataId);
+  console.log("Product keys:", Object.keys(prod));
+  console.log("Picture:", prod.Picture);
+  console.log("Pictures:", prod.Pictures);
+  console.log("Images:", prod.Images);
+  console.log("Gallery:", prod.Gallery);
+  console.dir(prod, { depth: null });
+  console.log("Info keys:", Object.keys(infoData || {}));
+
+  console.dir(infoData, { depth: null });
+
+  const dates = dateData.Dates || [];
   const name    = prod.OfferName || prod.Name || "Ponudba";
   const cat     = Number(prod.Category || 0);
   const stars   = "★".repeat(Math.min(cat, 5));
@@ -37,11 +87,78 @@ export default async function ProductPage({
     prod.Location?.RegionName,
   ].filter(Boolean).join(" / ");
 
-  const pictures: string[] = [
-    prod.Picture?.Full,
-    ...(prod.Pictures || []).map((p: any) => p.Full || p.Url || p),
-    prod.Picture?.Thumbnail,
-  ].filter((s): s is string => Boolean(s) && !s.includes("no-image"));
+  type GalleryPicture = {
+    full: string;
+    thumb: string;
+  };
+
+  function collectGalleryPictures(...sources: any[]) {
+    const urls: string[] = [];
+
+    function walk(value: any) {
+      if (!value) return;
+
+      if (typeof value === "string") {
+        if (
+          value.startsWith("http") &&
+          /\.(jpg|jpeg|png|webp)(\?|$)/i.test(value) &&
+          !value.includes("no-image")
+        ) {
+          urls.push(value);
+        }
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach(walk);
+        return;
+      }
+
+      if (typeof value === "object") {
+        Object.values(value).forEach(walk);
+      }
+    }
+
+    sources.forEach(walk);
+
+    const fullUrls = urls.filter((url) =>
+      url.includes("_f1024x1024.") ||
+      url.includes("/large/") ||
+      url.includes("_image_1024")
+    );
+
+    const pictures: GalleryPicture[] = fullUrls.map((full) => {
+      let thumb = full;
+
+      if (full.includes("_f1024x1024.")) {
+        thumb = full.replace("_f1024x1024.", "_c150x150.");
+      } else if (full.includes("/large/")) {
+        thumb = full.replace("/large/", "/small/");
+      }
+
+      return { full, thumb };
+    });
+
+    return Array.from(
+      new Map(pictures.map((pic) => [pic.full, pic])).values()
+    );
+  }
+
+  const pictures = collectGalleryPictures(
+    infoData,
+    prod.Pictures,
+    prod.Images,
+    prod.Gallery,
+    prod.Picture?.Large
+  );
+
+  console.log("========== FINAL GALLERY PICTURES ==========");
+  console.dir(pictures, { depth: null });
+
+  
+
+  console.log("========== FINAL PICTURES ==========");
+  console.log(pictures);
 
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
@@ -70,7 +187,11 @@ export default async function ProductPage({
         type={sp.type || "pauschal"}
       />
 
-      {data.usingMock && <p className="mock-notice">Mock mode: {data.error}</p>}
+      {(productData.usingMock || dateData.usingMock) && (
+        <p className="mock-notice">
+          Mock mode: {productData.error || dateData.error}
+        </p>
+      )}
 
       <div className="hero">
         <div className="gallery-wrap">

@@ -2,6 +2,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+
 const ORS_API_BASE =
   process.env.ORS_API_BASE ||
   (process.env.ORS_API_URL ? `${process.env.ORS_API_URL}/crs/v2` : "https://api.ors.si/crs/v2");
@@ -31,6 +32,7 @@ function buildSearchPayload(params: SearchParams) {
     Page: toNumberIfPossible(params.Page || 0),
   };
 
+  if (params.TourOperator) payload.TourOperator = params.TourOperator;
   if (params.RegionGroup) payload.RegionGroup = toNumberIfPossible(params.RegionGroup);
   if (params.Region) payload.Region = toNumberIfPossible(params.Region);
   if (params.Location) payload.Location = toNumberIfPossible(params.Location);
@@ -46,6 +48,8 @@ function buildSearchPayload(params: SearchParams) {
     "Filter[RoomType][]",
     "Filter[Region][]",
     "Filter[Location][]",
+    "Filter[StartDate][]",
+    "Filter[Duration][]",
     "RFilter[Price]",
   ];
 
@@ -142,6 +146,56 @@ export async function verifyOffer(tourOperator: string, hashCode: string, adultC
   } catch (e: any) {
     return { ...mockVerify(), usingMock: true, info: e.message || String(e) };
   }
+}
+
+export async function getProductInfo(params: {
+  GiataID: string | number;
+  TourOperator: string;
+  StartDate?: string;
+}) {
+  const { GiataID, TourOperator, StartDate } = params;
+
+  if (!ORS_API_KEY) {
+    throw new Error("ORS_API_KEY missing. Cannot fetch product info.");
+  }
+
+  const qs = StartDate
+    ? `?date=${encodeURIComponent(StartDate)}`
+    : "";
+
+  const path =
+    `/info/product/by-gid/${encodeURIComponent(String(GiataID))}` +
+    `/${encodeURIComponent(TourOperator)}` +
+    qs;
+
+  console.log("[ors] product info URL:", `${ORS_API_BASE}${path}`);
+
+  const res = await fetch(`${ORS_API_BASE}${path}`, {
+    method: "GET",
+    headers: {
+      "X-Api-Key": ORS_API_KEY,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const text = await res.text();
+
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = { raw: text };
+  }
+
+  console.log("[ors] product info status:", res.status);
+  console.log("[ors] product info raw response:", text.slice(0, 3000));
+
+  if (!res.ok) {
+    throw new Error(`ORS product info failed ${res.status}: ${text.slice(0, 1000)}`);
+  }
+
+  return data;
 }
 
 export async function registerOffer(
