@@ -1,6 +1,24 @@
 //app/checkout/[tourOperator]/[hashCode]/page.tsx
 import { verifyOffer } from "@/lib/ors";
 
+function parsePriceValue(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value === "string") {
+    const normalized = value
+      .trim()
+      .replace(/\s/g, "")
+      .replace(/€/g, "")
+      .replace(/\./g, "")
+      .replace(",", ".");
+
+    const parsed = Number(normalized);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return undefined;
+}
+
 export default async function CheckoutPage({
   params,
   searchParams,
@@ -13,97 +31,181 @@ export default async function CheckoutPage({
 
   const adultCount = Number(sp.AdultCount || 2);
   const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount);
-
-  const offerPrice = Number(verify.Price || verify.TotalPrice || 1118);
+  const offerPrice =
+    parsePriceValue(verify.Price?.TotalPrice) ??
+    parsePriceValue(verify.Price?.PricePerPerson) ??
+    parsePriceValue(verify.Price) ??
+    parsePriceValue(verify.TotalPrice) ??
+    parsePriceValue(verify.OfferPrice) ??
+    parsePriceValue(verify.Total) ??
+    1118;
   const registrationFee = 20;
   const total = offerPrice + registrationFee;
 
   return (
     <main className="container page-shell">
-      {verify.usingMock && <p className="mock-notice">Mock mode: {verify.info}</p>}
+      {verify.usingMock && <p className="mock-notice">Način z vzorčnimi podatki: {verify.info}</p>}
+
+      <section className="checkout-hero">
+        <div className="checkout-hero-copy">
+          <p className="eyebrow" style={{ color: "var(--c)", background: "rgba(139, 53, 63, 0.08)" }}>
+            Zahtevek za rezervacijo
+          </p>
+          <h1>Zaključite rezervacijo z nekaj jasnimi koraki.</h1>
+          <p>
+            Vnesite kontaktne podatke, podatke potnikov in pošljite rezervacijski zahtevek.
+            Povzetek ponudbe ostane ves čas viden na desni strani.
+          </p>
+        </div>
+        <div className="checkout-hero-stats">
+          <div className="checkout-hero-stat">
+            <span>Potniki</span>
+            <strong>{adultCount}</strong>
+          </div>
+          <div className="checkout-hero-stat">
+            <span>Rezervacija</span>
+            <strong>{total.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</strong>
+          </div>
+        </div>
+      </section>
 
       <form className="checkout-grid" action="/api/checkout" method="post">
         <input type="hidden" name="tourOperator" value={tourOperator} />
         <input type="hidden" name="hashCode" value={decodeURIComponent(hashCode)} />
         <input type="hidden" name="AdultCount" value={adultCount} />
-        <section>
-          <div className="checkout-box">
-            <h2>Vaši podatki</h2>
-            <div style={{ gridColumn: "1 / -1", display: "flex", gap: 20 }}>
-              <label className="check-terms">
+        <section className="checkout-main">
+          <div className="checkout-box checkout-box-accent">
+            <div className="checkout-section-head">
+              <div>
+                <p className="checkout-kicker">Korak 1</p>
+                <h2>Nosilec rezervacije</h2>
+              </div>
+              <p>Podatki osebe, s katero stopimo v stik glede rezervacije.</p>
+            </div>
+
+            <div className="checkout-choice-row">
+              <label className="check-terms check-pill">
                 <input type="radio" name="gender" value="m" defaultChecked />
                 Gospod
               </label>
-              <label className="check-terms">
+              <label className="check-terms check-pill">
                 <input type="radio" name="gender" value="f" />
                 Gospa
               </label>
             </div>
 
-            <div className="field-grid">
-              <div><label>Ime *</label><input name="name" /></div>
-              <div><label>Priimek *</label><input name="surname" /></div>
-              <div><label>Naslov *</label><input name="address" required /></div>
-              <div><label>Pošta *</label><input name="zip" required /></div>
-              <div><label>Kraj *</label><input name="city" required /></div>
-              <div><label>E-naslov *</label><input name="email" type="email" /></div>
-              <div><label>Telefon *</label><input name="phone" /></div>
+            <div className="field-grid checkout-field-grid">
+              <div className="form-field"><label>Ime *</label><input name="name" /></div>
+              <div className="form-field"><label>Priimek *</label><input name="surname" /></div>
+              <div className="form-field form-field-wide"><label>Naslov *</label><input name="address" required /></div>
+              <div className="form-field"><label>Pošta *</label><input name="zip" required /></div>
+              <div className="form-field"><label>Kraj *</label><input name="city" required /></div>
+              <div className="form-field"><label>E-naslov *</label><input name="email" type="email" /></div>
+              <div className="form-field"><label>Telefon *</label><input name="phone" /></div>
             </div>
           </div>
 
           <div className="checkout-box">
-            <h2>Podatki o potnikih</h2>
+            <div className="checkout-section-head">
+              <div>
+                <p className="checkout-kicker">Korak 2</p>
+                <h2>Podatki o potnikih</h2>
+              </div>
+              <p>Za vsakega potnika vnesite osebne podatke, kot morajo biti zapisani na dokumentih.</p>
+            </div>
+
+            <div className="traveler-stack">
             {Array.from({ length: adultCount }).map((_, i) => (
-              <div className="field-grid" key={i} style={{ marginBottom: 14 }}>
-                <div><label>{i + 1}. Potnik - Ime *</label><input name={`passengers[${i}][name]`} /></div>
-                <div><label>Priimek *</label><input name={`passengers[${i}][surname]`} /></div>
-                <div><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} /></div>
-                <div><label>Spol *</label><select name={`passengers[${i}][gender]`}><option>M</option><option>Ž</option></select></div>
+              <div className="traveler-card" key={i}>
+                <div className="traveler-card-head">
+                  <span className="traveler-index">Potnik {i + 1}</span>
+                  <span className="traveler-hint">obvezni podatki</span>
+                </div>
+                <div className="field-grid checkout-field-grid">
+                  <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} /></div>
+                  <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} /></div>
+                  <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} /></div>
+                  <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`}><option>M</option><option>Ž</option></select></div>
+                </div>
               </div>
             ))}
+            </div>
           </div>
 
           <div className="checkout-box">
-            <h2>Sporočilo organizatorju</h2>
-            <textarea name="note" rows={4}></textarea>
+            <div className="checkout-section-head">
+              <div>
+                <p className="checkout-kicker">Korak 3</p>
+                <h2>Dodatne želje</h2>
+              </div>
+              <p>Po želji dopišite opombe ali posebne zahteve za organizatorja.</p>
+            </div>
+            <div className="form-field">
+              <label>Sporočilo organizatorju</label>
+              <textarea name="note" rows={5} placeholder="Npr. želena ura leta, sedenje skupaj, posebne opombe ..." />
+            </div>
           </div>
 
           <div className="checkout-box">
-            <h2>Zavarovanje za odpoved aranžmaja</h2>
-            <label className="check-terms"><input type="checkbox" /> Želim zavarovati aranžma za primer odpovedi.</label>
-            <label className="check-terms"><input type="checkbox" /> Želim skleniti zdravstveno asistenco Coris.</label>
+            <div className="checkout-section-head">
+              <div>
+                <p className="checkout-kicker">Korak 4</p>
+                <h2>Zaščita potovanja</h2>
+              </div>
+              <p>Izberite dodatno zaščito, če želite rezervacijo dopolniti z zavarovanjem.</p>
+            </div>
+            <div className="choice-stack">
+              <label className="check-terms choice-card"><input type="checkbox" /> Želim zavarovati aranžma za primer odpovedi.</label>
+              <label className="check-terms choice-card"><input type="checkbox" /> Želim skleniti zdravstveno asistenco Coris.</label>
+            </div>
           </div>
 
           <div className="checkout-box">
-            <h2>Pogoji poslovanja</h2>
-            <label className="check-terms">
-
-            <input type="checkbox" name="terms" required />
-
-            Skrbno sem prebral pogoje poslovanja in jih potrjujem.
-
+            <div className="checkout-section-head">
+              <div>
+                <p className="checkout-kicker">Zaključek</p>
+                <h2>Potrditev pogojev</h2>
+              </div>
+              <p>Brez potrditve pogojev oddaja rezervacije ni mogoča.</p>
+            </div>
+            <label className="check-terms choice-card choice-card-strong">
+              <input type="checkbox" name="terms" required />
+              Skrbno sem prebral pogoje poslovanja in jih potrjujem.
             </label>
           </div>
         </section>
 
         <aside className="offer-box">
-          <h2>LETALSKI PREVOZ TURCIJA</h2>
-          <p className="location">Antalya / Turčija / Antalya z okolico</p>
-          <div className="summary-line"><span>Odhod na destinacijo</span><b>28.05.2026</b></div>
-          <div className="summary-line"><span>Odhod iz destinacije</span><b>04.06.2026</b></div>
-          <div className="summary-line"><span>Trajanje</span><b>7 dni</b></div>
-          <div className="summary-line"><span>Soba</span><b>brez namestitve</b></div>
-          <div className="summary-line"><span>Storitev</span><b>samo prevoz</b></div>
-          <div className="summary-line"><span>Letalski prevoz</span><b>Ljubljana - Antalya - Ljubljana</b></div>
-          <div className="summary-line"><span>Cena aranžmaja</span><b>{offerPrice.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</b></div>
-          <div className="summary-line"><span>Stroški rezervacije</span><b>{registrationFee.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</b></div>
-          <div className="summary-line">
-            <span className="summary-total">Skupaj</span>
-            <span className="summary-total">{total.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</span>
+          <div className="offer-box-top">
+            <p className="checkout-kicker">Povzetek ponudbe</p>
+            <h2>LETALSKI PREVOZ TURCIJA</h2>
+            <p className="location">Antalya / Turčija / Antalya z okolico</p>
           </div>
-          <button className="btn" style={{ width: "100%", marginTop: 18 }} type="submit">
-            Pošlji
+
+          <div className="offer-summary-cluster">
+            <div className="summary-line"><span>Odhod na destinacijo</span><b>28.05.2026</b></div>
+            <div className="summary-line"><span>Odhod iz destinacije</span><b>04.06.2026</b></div>
+            <div className="summary-line"><span>Trajanje</span><b>7 dni</b></div>
+            <div className="summary-line"><span>Soba</span><b>brez namestitve</b></div>
+            <div className="summary-line"><span>Storitev</span><b>samo prevoz</b></div>
+            <div className="summary-line"><span>Letalski prevoz</span><b>Ljubljana - Antalya - Ljubljana</b></div>
+          </div>
+
+          <div className="offer-price-panel">
+            <div className="summary-line"><span>Cena aranžmaja</span><b>{offerPrice.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</b></div>
+            <div className="summary-line"><span>Stroški rezervacije</span><b>{registrationFee.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</b></div>
+            <div className="summary-line summary-line-total">
+              <span className="summary-total">Skupaj</span>
+              <span className="summary-total">{total.toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}</span>
+            </div>
+          </div>
+
+          <button className="btn checkout-submit" type="submit">
+            Pošlji rezervacijo
           </button>
+          <p className="checkout-submit-note">
+            Po oddaji bomo zahtevek poslali organizatorju in vas preusmerili na potrditev.
+          </p>
         </aside>
       </form>
     </main>

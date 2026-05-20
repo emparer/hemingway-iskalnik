@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 interface Props {
   data: any;
@@ -38,6 +38,25 @@ export default function Filters({ data }: Props) {
 
   const [maxPrice, setMaxPrice] = useState(priceMax);
   const [showAllCities, setShowAllCities] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, Set<string>>>({});
+
+  function snapshotSelectedFilters(params: typeof sp) {
+    return {
+      "Filter[Category][]": new Set(params.getAll("Filter[Category][]")),
+      "Filter[ServiceType][]": new Set(params.getAll("Filter[ServiceType][]")),
+      "Filter[RoomType][]": new Set(params.getAll("Filter[RoomType][]")),
+      "Filter[Region][]": new Set(params.getAll("Filter[Region][]")),
+      "Filter[Location][]": new Set(params.getAll("Filter[Location][]")),
+    };
+  }
+
+  useEffect(() => {
+    setMaxPrice(priceMax);
+  }, [priceMax, sp]);
+
+  useEffect(() => {
+    setSelectedFilters(snapshotSelectedFilters(sp));
+  }, [sp]);
 
   function pushFilter(key: string, value: string, checked: boolean) {
     const params = new URLSearchParams(sp.toString());
@@ -49,18 +68,18 @@ export default function Filters({ data }: Props) {
       existing.filter(v => v !== value).forEach(v => params.append(key, v));
     }
     params.set("Page", "0");
-    startT(() => router.push("?" + params.toString()));
+    startT(() => router.push("?" + params.toString(), { scroll: false }));
   }
 
   function applyPriceRange() {
     const params = new URLSearchParams(sp.toString());
     params.set("RFilter[Price]", `${priceMin}, ${maxPrice}`);
     params.set("Page", "0");
-    router.push("?" + params.toString());
+    router.push("?" + params.toString(), { scroll: false });
   }
 
   const serviceOptions = [
-    { value: "AI", label: "All inclusive" },
+    { value: "AI", label: "Vse vključeno" },
     { value: "UF", label: "Nočitev z zajtrkom" },
     { value: "HP", label: "Polpenzion" },
     { value: "VP", label: "Polni penzion" },
@@ -76,12 +95,12 @@ export default function Filters({ data }: Props) {
   ];
 
   const visibleCities = showAllCities ? cities : cities.slice(0, 8);
-  const resetParams = new URLSearchParams();
+  const resetParams = new URLSearchParams(sp.toString());
+  ["Filter[Category][]", "Filter[ServiceType][]", "Filter[RoomType][]", "Filter[Region][]", "Filter[Location][]", "RFilter[Price]", "ProductName"].forEach(key => resetParams.delete(key));
 
-  ["type", "query", "RegionGroup", "StartDate", "EndDate", "AdultCount", "Duration"].forEach(key => {
-    const value = sp.get(key);
-    if (value) resetParams.set(key, value);
-  });
+  function isChecked(key: string, value: string) {
+    return selectedFilters[key]?.has(value) ?? false;
+  }
 
   return (
     <aside className="sidebar">
@@ -90,7 +109,7 @@ export default function Filters({ data }: Props) {
         <button
           type="button"
           className="btn-light"
-          onClick={() => router.push(`?${resetParams.toString()}`)}
+          onClick={() => router.push(`?${resetParams.toString()}`, { scroll: false })}
           style={{ padding: "10px 14px", fontSize: 12 }}
         >
           Ponastavi
@@ -122,10 +141,17 @@ export default function Filters({ data }: Props) {
           <label key={n} className="check">
             <input
               type="checkbox"
-              defaultChecked={sp.getAll("Filter[Category][]").includes(String(n))}
+              checked={isChecked("Filter[Category][]", String(n))}
               onChange={e => pushFilter("Filter[Category][]", String(n), e.target.checked)}
             />
-            {"★".repeat(n)} {n} zvezdic{n === 1 ? "a" : n === 2 ? "i" : "e"}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, marginRight: 6 }}>
+              {Array.from({ length: n }).map((_, i) => (
+                <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#eab308">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              ))}
+            </span>
+            {n} zvezdic{n === 1 ? "a" : n === 2 ? "i" : "e"}
           </label>
         ))}
       </div>
@@ -136,7 +162,7 @@ export default function Filters({ data }: Props) {
           <label key={o.value} className="check">
             <input
               type="checkbox"
-              defaultChecked={sp.getAll("Filter[ServiceType][]").includes(o.value)}
+              checked={isChecked("Filter[ServiceType][]", o.value)}
               onChange={e => pushFilter("Filter[ServiceType][]", o.value, e.target.checked)}
             />
             {o.label}
@@ -150,7 +176,7 @@ export default function Filters({ data }: Props) {
           <label key={o.value} className="check">
             <input
               type="checkbox"
-              defaultChecked={sp.getAll("Filter[RoomType][]").includes(o.value)}
+              checked={isChecked("Filter[RoomType][]", o.value)}
               onChange={e => pushFilter("Filter[RoomType][]", o.value, e.target.checked)}
             />
             {o.label}
@@ -165,7 +191,7 @@ export default function Filters({ data }: Props) {
             <label key={r.ID || r.Value} className="check">
               <input
                 type="checkbox"
-                defaultChecked={sp.getAll("Filter[Region][]").includes(String(r.ID || r.Value))}
+                checked={isChecked("Filter[Region][]", String(r.ID || r.Value))}
                 onChange={e => pushFilter("Filter[Region][]", String(r.ID || r.Value), e.target.checked)}
               />
               {r.Name || r.Label || r.Value}
@@ -181,7 +207,7 @@ export default function Filters({ data }: Props) {
             <label key={c.ID || c.Value} className="check">
               <input
                 type="checkbox"
-                defaultChecked={sp.getAll("Filter[Location][]").includes(String(c.ID || c.Value))}
+                checked={isChecked("Filter[Location][]", String(c.ID || c.Value))}
                 onChange={e => pushFilter("Filter[Location][]", String(c.ID || c.Value), e.target.checked)}
               />
               {c.Name || c.Label || c.Value}
@@ -209,7 +235,7 @@ export default function Filters({ data }: Props) {
             if (val) params.set("ProductName", val);
             else params.delete("ProductName");
             params.set("Page", "0");
-            router.push("?" + params.toString());
+            router.push("?" + params.toString(), { scroll: false });
           }}
         >
           <input

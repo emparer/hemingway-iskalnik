@@ -1,15 +1,27 @@
 //lib/ors.ts
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 
-
-const ORS_API_BASE =
+export const ORS_API_BASE =
   process.env.ORS_API_BASE ||
   (process.env.ORS_API_URL ? `${process.env.ORS_API_URL}/crs/v2` : "https://api.ors.si/crs/v2");
-const ORS_API_KEY  = process.env.ORS_API_KEY || "";
-const execFileAsync = promisify(execFile);
+export const ORS_API_KEY  = process.env.ORS_API_KEY || "";
+const MAX_GLOBAL_SORT_RESULTS = 500;
 
 type SearchParams = Record<string, any>;
+
+type ProductResult = {
+  MinPrice?: number;
+  MinimumPrice?: number;
+  OfferRating?: number;
+  OverallRating?: number;
+  Rating?: number;
+  ProductRating?: number;
+  Product?: {
+    Category?: number;
+    OfferRating?: number;
+    OverallRating?: number;
+    Rating?: number;
+  };
+};
 
 function cleanObject(obj: Record<string, any>) {
   return Object.fromEntries(
@@ -23,7 +35,44 @@ function toNumberIfPossible(v: any) {
   return Number.isNaN(n) ? v : n;
 }
 
+function readOfferRating(item: ProductResult) {
+  const raw = Number(
+    item.Product?.OfferRating ??
+    item.Product?.OverallRating ??
+    item.Product?.Rating ??
+    item.OfferRating ??
+    item.OverallRating ??
+    item.Rating ??
+    item.ProductRating ??
+    0
+  );
+
+  return raw > 10 ? raw / 10 : raw;
+}
+
+function sortByBestRating(results: ProductResult[]) {
+  return [...results].sort((a, b) => {
+    const aRating = readOfferRating(a);
+    const bRating = readOfferRating(b);
+
+    if (aRating === 0 && bRating > 0) return 1;
+    if (bRating === 0 && aRating > 0) return -1;
+    if (bRating !== aRating) return bRating - aRating;
+
+    const aPrice = Number(a.MinimumPrice ?? a.MinPrice ?? 0);
+    const bPrice = Number(b.MinimumPrice ?? b.MinPrice ?? 0);
+    return aPrice - bPrice;
+  });
+}
+
 function buildSearchPayload(params: SearchParams) {
+  function toArray(val: any): any[] {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string" && val.includes(",")) return val.split(",");
+    return [val];
+  }
+
   const payload: Record<string, any> = {
     StartDate: params.StartDate || "19.05.2026",
     EndDate: params.EndDate || "18.05.2027",
@@ -37,27 +86,56 @@ function buildSearchPayload(params: SearchParams) {
   if (params.Region) payload.Region = toNumberIfPossible(params.Region);
   if (params.Location) payload.Location = toNumberIfPossible(params.Location);
   if (params.GiataID) payload.GiataID = toNumberIfPossible(params.GiataID);
-  if (params.Duration) payload.Duration = params.Duration;
   if (params.ProductName) payload.ProductName = params.ProductName;
+  if (params.SubType) payload.SubType = params.SubType;
+  
+  const airports = params.DepartureAirports || params["DepartureAirports[]"];
+  if (airports) {
+    payload.DepartureAirports = toArray(airports);
+  }
+
+  // Duration handling (split "7-9" into MinDuration/MaxDuration)
+  if (params.Duration) {
+    const parts = String(params.Duration).split("-");
+    if (parts.length === 2) {
+      payload.MinDuration = toNumberIfPossible(parts[0]);
+      payload.MaxDuration = toNumberIfPossible(parts[1]);
+    } else {
+      payload.MinDuration = toNumberIfPossible(params.Duration);
+      payload.MaxDuration = toNumberIfPossible(params.Duration);
+    }
+  }
 
   // Filters (Nested)
   const filters: Record<string, any> = {};
   
+  // Handle MinCategory from SearchBox
+  if (params.MinCategory) {
+    const min = Number(params.MinCategory);
+    filters.Category = Array.from({ length: 6 - min }, (_, i) => min + i);
+  }
+
+  // Handle ServiceCodes from SearchBox
+  const serviceCodes = params.ServiceCodes || params["ServiceCodes[]"];
+  if (serviceCodes) {
+    filters.ServiceType = toArray(serviceCodes);
+  }
+
+  // Handle standard filters from Filters component
   if (params["Filter[Category][]"]) {
-    const cats = Array.isArray(params["Filter[Category][]"]) ? params["Filter[Category][]"] : [params["Filter[Category][]"]];
-    filters.Category = cats.map(Number);
+    filters.Category = toArray(params["Filter[Category][]"]).map(Number);
   }
   if (params["Filter[ServiceType][]"]) {
-    filters.ServiceType = Array.isArray(params["Filter[ServiceType][]"]) ? params["Filter[ServiceType][]"] : [params["Filter[ServiceType][]"]];
+    filters.ServiceType = toArray(params["Filter[ServiceType][]"]);
   }
   if (params["Filter[RoomType][]"]) {
-    filters.RoomType = Array.isArray(params["Filter[RoomType][]"]) ? params["Filter[RoomType][]"] : [params["Filter[RoomType][]"]];
+    filters.RoomType = toArray(params["Filter[RoomType][]"]);
   }
   if (params["Filter[Region][]"]) {
-    filters.Region = Array.isArray(params["Filter[Region][]"]) ? params["Filter[Region][]"] : [params["Filter[Region][]"]];
+    filters.Region = toArray(params["Filter[Region][]"]);
   }
   if (params["Filter[Location][]"]) {
-    filters.Location = Array.isArray(params["Filter[Location][]"]) ? params["Filter[Location][]"] : [params["Filter[Location][]"]];
+    filters.Location = toArray(params["Filter[Location][]"]);
   }
   
   if (Object.keys(filters).length > 0) {
@@ -67,15 +145,16 @@ function buildSearchPayload(params: SearchParams) {
   // Sorting
   if (params.SortField) {
     const apiField = params.SortField;
+    const apiOrder = String(params.SortDir || "asc").toLowerCase().startsWith("desc") ? "desc" : "asc";
     payload.Sort = [{
-      [apiField]: params.SortDir || "asc"
+      [apiField]: apiOrder
     }];
   }
 
   return cleanObject(payload);
 }
 
-async function orsPost(path: string, payload: Record<string, any>) {
+export async function orsPost(path: string, payload: Record<string, any>) {
   if (!ORS_API_KEY) {
     throw new Error("ORS_API_KEY missing. Using mock data.");
   }
@@ -99,10 +178,49 @@ async function orsPost(path: string, payload: Record<string, any>) {
   return res.json();
 }
 
+async function searchProductsSortedByRating(type: string, params: SearchParams) {
+  const requestedPage = Number(params.Page || 0);
+  const perPage = Number(params.PageSize || params.Count || 12);
+  const basePayload = buildSearchPayload({
+    ...params,
+    Page: 0,
+    Count: 1,
+  });
+
+  const meta = await orsPost(`/search/${type}/products`, basePayload);
+  const total = Math.min(Number(meta.Count || 0), MAX_GLOBAL_SORT_RESULTS);
+
+  const fullPayload = buildSearchPayload({
+    ...params,
+    Page: 0,
+    Count: total > 0 ? total : perPage,
+  });
+
+  const fullData = await orsPost(`/search/${type}/products`, fullPayload);
+  const allResults = Array.isArray(fullData.Results) ? fullData.Results : [];
+  const sortedResults = sortByBestRating(allResults);
+  const pages = Math.max(1, Math.ceil(sortedResults.length / perPage));
+  const start = requestedPage * perPage;
+  const end = start + perPage;
+
+  return {
+    ...fullData,
+    Count: sortedResults.length,
+    Pages: pages,
+    Page: requestedPage,
+    Results: sortedResults.slice(start, end),
+  };
+}
+
 export async function searchProducts(params: SearchParams) {
   const type = params.type || "pauschal";
+  const sortField = String(params.SortField || "Price");
 
   try {
+    if (sortField === "OverallRating") {
+      return await searchProductsSortedByRating(type, params);
+    }
+
     return await orsPost(`/search/${type}/products`, buildSearchPayload(params));
   } catch (e: any) {
     return { ...dynamicMockSearchResults(params), usingMock: true, error: e.message || String(e) };
@@ -119,42 +237,16 @@ export async function searchDates(params: SearchParams) {
   }
 }
 
-export async function quickSearch(query: string, type = "any") {
-  try {
-    const data = await orsPost(`/search/${type}/quicksearch`, { Query: query });
 
-    if (data?.Results) {
-      return data;
-    }
-
-    // ORS quicksearch sometimes returns only RequestID for Node fetch, while
-    // the same request via curl returns full results. Fall back narrowly here.
-    const { stdout } = await execFileAsync("curl", [
-      "-s",
-      "-X",
-      "POST",
-      `${ORS_API_BASE}/search/${type}/quicksearch`,
-      "-H",
-      `X-Api-Key: ${ORS_API_KEY}`,
-      "-H",
-      "Content-Type: application/json",
-      "-d",
-      JSON.stringify({ Query: query }),
-    ]);
-
-    return JSON.parse(stdout);
-  } catch (e: any) {
-    return { Results: {}, usingMock: true, error: e.message || String(e) };
-  }
-}
-
-export async function verifyOffer(tourOperator: string, hashCode: string, adultCount: number) {
+export async function verifyOffer(tourOperator: string, hashCode: string, adultCount: number, ages: number[] = []) {
   try {
     return await orsPost(`/offer/${tourOperator}/${encodeURIComponent(hashCode)}/verify`, {
       AdultCount: adultCount,
+      ChildCount: 0,
+      Ages: ages,
     });
   } catch (e: any) {
-    return { ...mockVerify(), usingMock: true, info: e.message || String(e) };
+    return { ...mockVerify(), usingMock: true, error: e.message || String(e) };
   }
 }
 

@@ -20,8 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <a href="mailto:info@hemingway.si">info@hemingway.si</a>
               </div>
               <div className="socials">
-                <a href="https://www.facebook.com/hemingway.si" target="_blank" rel="noopener">Facebook</a>
-                <a href="https://www.instagram.com/hemingwaypotovanja/" target="_blank" rel="noopener">Instagram</a>
+                <a href="https://www.facebook.com/hemingway.si" target="_blank" rel="noopener">
+                  <img src="/facebook.png" alt="Facebook" width="20" height="20" />
+                </a>
+                <a href="https://www.instagram.com/hemingwaypotovanja/" target="_blank" rel="noopener">
+                  <img src="/instagram.png" alt="Instagram" width="20" height="20" />
+                </a>
               </div>
             </div>
           </div>
@@ -29,14 +33,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <nav className="navbar">
             <div className="container navbar-inner">
               <Link href="/" className="brand-lockup">
-                <span className="brand">HEMINGWAY</span>
-                <span className="brand-subtitle">Travel Selection</span>
+                <img src="/hemingway.png" alt="Hemingway Travel Selection" className="brand-logo" />
               </Link>
-              <div className="nav">
-                <Link href="/?type=pauschal">Počitnice z letalom</Link>
-                <Link href="/?type=hotel">Samo namestitve</Link>
-                <Link href="/?type=trips">Avtobusna potovanja</Link>
-              </div>
             </div>
           </nav>
 

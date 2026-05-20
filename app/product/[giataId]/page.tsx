@@ -1,6 +1,7 @@
 //app/product/[giataId]/page.tsx
 import SearchBox from "@/components/SearchBox";
 import GalleryClient from "@/components/GalleryClient";
+import DateRow from "@/components/DateRow";
 import { searchDates, searchProducts, getProductInfo } from "@/lib/ors";
 import Link from "next/link";
 
@@ -16,6 +17,15 @@ function getFirstProduct(productData: any, giataId: string) {
   return item?.Product || item || {};
 }
 
+function UserIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
 export default async function ProductPage({
   params,
   searchParams,
@@ -27,59 +37,33 @@ export default async function ProductPage({
   const sp = await searchParams;
 
   const productData = await searchProducts({
-    type: sp.type || "pauschal",
     GiataID: giataId,
-    TourOperator: sp.TourOperator || "",
-    RegionGroup: sp.RegionGroup || "724",
-    StartDate: sp.StartDate || "19.05.2026",
-    EndDate: sp.EndDate || "18.05.2027",
+    type: sp.type || "pauschal",
     AdultCount: sp.AdultCount || 2,
-    Count: 1,
-    PageSize: 1,
-    Page: 0,
   });
 
   const dateData = await searchDates({
-    type: sp.type || "pauschal",
     GiataID: giataId,
-    TourOperator: sp.TourOperator || "",
-    RegionGroup: sp.RegionGroup || "724",
-    StartDate: sp.StartDate || "19.05.2026",
-    EndDate: sp.EndDate || "18.05.2027",
+    type: sp.type || "pauschal",
     AdultCount: sp.AdultCount || 2,
   });
 
-  let infoData: any = {};
-
-  try {
-    infoData = await getProductInfo({
-      GiataID: giataId,
-      TourOperator: sp.TourOperator || "PALM",
-      StartDate: sp.StartDate || "19.05.2026",
-    });
-  } catch (e: any) {
-    console.error("[product] getProductInfo failed:", e.message || e);
-  }
+  const infoData = await getProductInfo({
+    GiataID: giataId,
+    TourOperator: sp.TourOperator || "PALM",
+  });
 
   const prod = getFirstProduct(productData, giataId);
-
-  console.log("========== PRODUCT DEBUG ==========");
-  console.log("GiataID:", giataId);
-  console.log("Product keys:", Object.keys(prod));
-  console.log("Picture:", prod.Picture);
-  console.log("Pictures:", prod.Pictures);
-  console.log("Images:", prod.Images);
-  console.log("Gallery:", prod.Gallery);
-  console.dir(prod, { depth: null });
-  console.log("Info keys:", Object.keys(infoData || {}));
-
-  console.dir(infoData, { depth: null });
-
   const dates = dateData.Dates || [];
   const name    = prod.OfferName || prod.Name || "Ponudba";
   const cat     = Number(prod.Category || 0);
-  const stars   = "★".repeat(Math.min(cat, 5));
-  const rating  = Number(prod.OverallRating || prod.Rating || 0);
+  const rating = Number(prod.OverallRating || prod.Rating || 0) > 10 
+    ? Number(prod.OverallRating || prod.Rating || 0) / 10 
+    : Number(prod.OverallRating || prod.Rating || 0);
+const formatDate = (dateStr: string) => {
+  return dateStr;
+};
+
 
   const loc = [
     prod.Location?.LocationName,
@@ -121,7 +105,6 @@ export default async function ProductPage({
         infoData?.Product?.Picture?.Full ||
         prod?.Picture?.Large ||
         prod?.Picture?.Full;
-
       const thumb =
         infoData?.Product?.Picture?.Thumbnail ||
         prod?.Picture?.Thumbnail ||
@@ -130,44 +113,20 @@ export default async function ProductPage({
       if (full) {
         pictures.push({
           full,
-          thumb,
+          thumb: thumb || full,
         });
       }
     }
 
-    return Array.from(
-      new Map(pictures.map((pic) => [pic.full, pic])).values()
-    );
+    return pictures;
   }
 
-  const pictures = collectGalleryPictures(infoData, prod);
-
-  console.log("========== FINAL GALLERY PICTURES ==========");
-  console.dir(pictures, { depth: null });
-
-  
-
-  console.log("========== FINAL PICTURES ==========");
-  console.log(pictures);
-
+  const galleryPictures = collectGalleryPictures(infoData, prod);
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
-  const typeLabel =
-    sp.type === "hotel" ? "Hotel stay" :
-    sp.type === "trips" ? "Bus journey" :
-    "Flight package";
 
   return (
     <main className="container page-shell">
-      <div style={{ paddingTop: 16 }}>
-        <Link
-          href={`/?type=${sp.type || "pauschal"}&query=${encodeURIComponent(sp.query || "Turčija")}&RegionGroup=${sp.RegionGroup || "724"}`}
-          className="back-link"
-        >
-          Nazaj na ponudbe
-        </Link>
-      </div>
-
       <SearchBox
         defaultQuery={sp.query || prod.Location?.RegionGroupName || "Turčija"}
         defaultRegionGroup={String(sp.RegionGroup || prod.Location?.RegionGroupID || 724)}
@@ -175,6 +134,7 @@ export default async function ProductPage({
         defaultEndDate={sp.EndDate || "18.05.2027"}
         defaultAdultCount={Number(sp.AdultCount || 2)}
         type={sp.type || "pauschal"}
+        compact={true}
       />
 
       {(productData.usingMock || dateData.usingMock) && (
@@ -183,49 +143,63 @@ export default async function ProductPage({
         </p>
       )}
 
-      <div className="hero">
-        <div className="gallery-wrap">
-          <GalleryClient pictures={pictures} alt={name} />
-        </div>
-        <aside className="product-side">
-          <div className="eyebrow" style={{ color: "var(--c)", background: "rgba(139, 53, 63, 0.08)" }}>{typeLabel}</div>
-          <h1>{name}</h1>
-          {loc && <p className="location">{loc}</p>}
-          <div className="product-meta">
-            {stars && <span className="card-chip">{cat} zvezdic</span>}
-            {rating > 0 && (
-              <span className="rating-badge" style={{ background: ratingBg, color: ratingColor }}>
-                Ocena {rating}/10
-              </span>
-            )}
-          </div>
-          <div className="detail-stat-grid">
-            <div className="detail-stat">
-              <span>Tip poti</span>
-              <strong>{sp.type === "hotel" ? "Samo namestitev" : sp.type === "trips" ? "Avtobusno potovanje" : "Letalska ponudba"}</strong>
-            </div>
-            <div className="detail-stat">
-              <span>Potniki</span>
-              <strong>{sp.AdultCount || 2} odrasli</strong>
-            </div>
-            <div className="detail-stat">
-              <span>Odhodno okno</span>
-              <strong>{sp.StartDate || "19.05.2026"}</strong>
-            </div>
-            <div className="detail-stat">
-              <span>Povratno okno</span>
-              <strong>{sp.EndDate || "18.05.2027"}</strong>
+      <div className="layout">
+        <section className="results-panel" style={{ gridColumn: "1/-1" }}>
+          <div className="offer-header">
+            <div className="eyebrow">{prod.Location?.RegionGroupName}</div>
+            <h1>{name}</h1>
+            <div className="product-meta">
+              {cat > 0 && (
+                <span className="card-chip" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  {Array.from({ length: Math.min(cat, 5) }).map((_, i) => (
+                    <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#eab308">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  ))}
+                  <span style={{ marginLeft: 3 }}>{cat} zvezdic</span>
+                </span>
+              )}
+              {rating > 0 && (
+                <span className="rating-badge" style={{ background: ratingBg, color: ratingColor }}>
+                  Ocena {rating}/10
+                </span>
+              )}
             </div>
           </div>
-          <p className="muted">
-            Pregled ponudbe je prilagojen hitri primerjavi terminov, storitev in cene na osebo.
-          </p>
-          <div style={{ marginTop: "auto" }}>
-            <a href="#dates" className="btn" style={{ display: "block", textAlign: "center" }}>
-              Preveri termine in cene
-            </a>
+
+          <div className="offer-box" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 30, padding: 30, borderRadius: 28 }}>
+            <GalleryClient pictures={galleryPictures} alt={name} />
+            <aside className="product-side" style={{ borderRadius: 28, padding: 24, display: "flex", flexDirection: "column" }}>
+              <h3 style={{ marginBottom: 20 }}>Povzetek iskanja</h3>
+              <div className="detail-stat-grid">
+                <div className="detail-stat">
+                  <span>Tip poti</span>
+                  <strong>{sp.type === "hotel" ? "Samo namestitev" : sp.type === "trips" ? "Avtobusno potovanje" : "Letalska ponudba"}</strong>
+                </div>
+                <div className="detail-stat">
+                  <span>Potniki</span>
+                  <strong>{sp.AdultCount || 2} odrasli</strong>
+                </div>
+                <div className="detail-stat">
+                  <span>Odhodno okno</span>
+                  <strong>{formatDate(sp.StartDate || "19.05.2026")}</strong>
+                </div>
+                <div className="detail-stat">
+                  <span>Povratno okno</span>
+                  <strong>{formatDate(sp.EndDate || "18.05.2027")}</strong>
+                </div>
+              </div>
+              <p className="muted">
+                Pregled ponudbe je prilagojen hitri primerjavi terminov, storitev in cene na osebo.
+              </p>
+              <div style={{ marginTop: "auto" }}>
+                <a href="#dates" className="btn" style={{ display: "block", textAlign: "center" }}>
+                  Preveri termine in cene
+                </a>
+              </div>
+            </aside>
           </div>
-        </aside>
+        </section>
       </div>
 
       <section className="tabs" id="dates">
@@ -257,56 +231,29 @@ export default async function ProductPage({
             }).toString();
 
             return (
-              <div className="date-row" key={i}>
-                <div className="date-meta">
-                  <span className="date-label">Odhod</span>
-                  <span>{d.StartDate || "—"}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="date-label">Povratek</span>
-                  <span>{d.EndDate || "—"}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="date-label">Dni</span>
-                  <span>{d.Duration || "?"}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="date-label">Soba</span>
-                  <span>{d.RoomName || "brez namestitve"}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="date-label">Storitev</span>
-                  <span>{d.ServiceName || "samo prevoz"}</span>
-                </div>
-                <div className="date-meta">
-                  <span className="date-label">Cena na osebo</span>
-                  <span className="date-price">
-                    {Number(d.Price || 0).toLocaleString("sl-SI", { style: "currency", currency: "EUR" })}
-                  </span>
-                </div>
-                <Link
-                  className="btn"
-                  style={{ padding: "7px 12px", fontSize: 12, whiteSpace: "nowrap" }}
-                  href={`/checkout/${tourOpEnc}/${hashEnc}?${qs}`}
-                >
-                  Rezerviraj
-                </Link>
-              </div>
+              <DateRow 
+                key={i} 
+                d={d} 
+                tourOpEnc={tourOpEnc} 
+                hashEnc={hashEnc} 
+                qs={qs} 
+                adultCount={Number(sp.AdultCount || 2)} 
+              />
             );
           })}
         </div>
       </section>
 
-      <section className="tabs">
-        <h2>Opis ponudbe</h2>
-        {prod.Description || prod.DescriptionSI ? (
+      <section className="tabs" style={{ marginTop: 28, padding: 30, borderRadius: 28 }}>
+        <h2 style={{ marginBottom: 20, fontFamily: "var(--font-head)", fontSize: "2.4rem" }}>Opis ponudbe</h2>
+        {(infoData?.Description || prod.Description || prod.DescriptionSI) ? (
           <div
             className="rich-text"
-            dangerouslySetInnerHTML={{ __html: prod.Description || prod.DescriptionSI || "" }}
+            dangerouslySetInnerHTML={{ __html: infoData.Description || prod.Description || prod.DescriptionSI || "" }}
           />
         ) : (
           <div className="rich-text">
-            <p><strong>Cena vključuje:</strong> povraten let v izbran kraj, letališke in varnostne pristojbine, 20 kg oddane prtljage, 5 kg ročne prtljage, prigrizek in napitek med poletom, predstavnika agencije v informacijski poslovalnici na letališču.</p>
+            <p><strong>Cena vključuje:</strong> povraten let v izbran kraj, letališke in varnostne pristojbine, 20 kg oddane prtlagage, 5 kg ročne prtljage, prigrizek in napitek med poletom, predstavnika agencije v informacijski poslovalnici na letališču.</p>
             <p style={{ marginTop: 12 }}>Opisi objektov so povzeti iz spletnih strani/brošur/informacij s strani partnerjev.</p>
           </div>
         )}

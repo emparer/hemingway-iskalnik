@@ -1,16 +1,14 @@
 //app/page.tsx
-
 import SearchBox from "@/components/SearchBox";
 import ProductCard from "@/components/ProductCard";
 import Filters from "@/components/Filters";
 import { searchProducts } from "@/lib/ors";
 import Link from "next/link";
-import Header from "@/components/Header";
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string | string[]>>;
 }) {
   const sp = await searchParams;
 
@@ -26,11 +24,14 @@ export default async function Home({
     AdultCount:  sp.AdultCount,
     Duration:    sp.Duration,
     ServiceType: sp.ServiceType,
-    MinimumCategory: sp.MinimumCategory,
     Page:        sp.Page        || "0",
     SortField:   sp.SortField   || "Price",
     SortDir:     sp.SortDir     || "asc",
     ProductName: sp.ProductName,
+    // New specific fields
+    DepartureAirports: sp.DepartureAirports || sp["DepartureAirports[]"],
+    MinCategory:       sp.MinCategory,
+    ServiceCodes:      sp.ServiceCodes || sp["ServiceCodes[]"],
     "Filter[Category][]":    sp["Filter[Category][]"],
     "Filter[ServiceType][]": sp["Filter[ServiceType][]"],
     "Filter[RoomType][]":    sp["Filter[RoomType][]"],
@@ -41,32 +42,52 @@ export default async function Home({
 
   const results  = data.Results || [];
   const count    = data.Count || results.length;
-  const perPage  = data.PerPage || 12;
-  const pages    = Math.ceil(count / perPage);
+  const pages    = data.Pages || 1;
   const page     = Number(sp.Page || 0);
   const type     = sp.type || "pauschal";
+  const activeSortField = sp.SortField || "Price";
+  const activeSortDir = sp.SortDir || "asc";
+
+  function buildQueryString(updates: Record<string, string>) {
+    const p = new URLSearchParams();
+    
+    // Add all existing parameters
+    for (const [key, value] of Object.entries(sp)) {
+      if (key in updates) continue;
+      
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          p.append(key, item);
+        }
+      } else if (value !== undefined) {
+        p.append(key, value as string);
+      }
+    }
+    
+    // Add updates
+    for (const [key, val] of Object.entries(updates)) {
+        p.set(key, val);
+    }
+    return "?" + p.toString();
+  }
 
   function sortUrl(field: string, dir: string) {
-    const p = new URLSearchParams({ ...sp, SortField: field, SortDir: dir, Page: "0" });
-    return "?" + p.toString();
+    return buildQueryString({ SortField: field, SortDir: dir, Page: "0" });
   }
 
   function pageUrl(n: number) {
-    const p = new URLSearchParams({ ...sp, Page: String(n) });
-    return "?" + p.toString();
+    return buildQueryString({ Page: String(n) });
   }
 
   return (
-  
-
     <main className="container page-shell">
       <SearchBox
-        defaultQuery={sp.query || "Turčija"}
-        defaultRegionGroup={sp.RegionGroup || "724"}
-        defaultStartDate={sp.StartDate || "19.05.2026"}
-        defaultEndDate={sp.EndDate || "18.05.2027"}
+        defaultQuery={String(sp.query || "Turčija")}
+        defaultRegionGroup={String(sp.RegionGroup || "724")}
+        defaultStartDate={String(sp.StartDate || "19.05.2026")}
+        defaultEndDate={String(sp.EndDate || "18.05.2027")}
         defaultAdultCount={Number(sp.AdultCount || 2)}
-        type={type}
+        type={Array.isArray(type) ? type[0] : type}
       />
 
       {data.usingMock && (
@@ -80,16 +101,19 @@ export default async function Home({
           <div className="topbar">
             <div className="topbar-copy">
               <p className="eyebrow" style={{ color: "var(--c)", background: "rgba(139, 53, 63, 0.08)", marginBottom: 12 }}>
-                Selected offers
+                Ponudbe
               </p>
-              <h2>Ponudbe za sodoben izbor poti.</h2>
-              <p className="topbar-count">Najdenih {count} ponudb. Razvrstite jih po ceni, oceni ali kategoriji.</p>
+              <p className="topbar-count">Najdenih {count} ponudb.</p>
             </div>
             <div className="sort-btns">
-              <Link className="btn-light" href={sortUrl("Price", "asc")}>Cena naraščajoče</Link>
-              <Link className="btn-light" href={sortUrl("Price", "desc")}>Cena padajoče</Link>
-              <Link className="btn-light" href={sortUrl("OverallRating", "desc")}>Najboljše ocene</Link>
-              <Link className="btn-light" href={sortUrl("Category", "desc")}>Najvišja kategorija</Link>
+              <Link 
+                className={`btn-light${activeSortField === "Price" ? " active" : ""}`} 
+                href={sortUrl("Price", activeSortField === "Price" && activeSortDir === "asc" ? "desc" : "asc")}
+              >
+                Cena {activeSortField === "Price" ? (activeSortDir === "asc" ? "↑" : "↓") : ""}
+              </Link>
+              <Link className={`btn-light${activeSortField === "OverallRating" ? " active" : ""}`} href={sortUrl("OverallRating", "desc")}>Najboljše ocene {activeSortField === "OverallRating" ? "↓" : ""}</Link>
+              <Link className={`btn-light${activeSortField === "Category" ? " active" : ""}`} href={sortUrl("Category", "desc")}>Najvišja kategorija {activeSortField === "Category" ? "↓" : ""}</Link>
             </div>
           </div>
 
@@ -100,7 +124,7 @@ export default async function Home({
           ) : (
             <div className="product-grid">
               {results.map((item: any, i: number) => (
-                <ProductCard key={i} item={item} searchParams={sp} />
+                <ProductCard key={i} item={item} searchParams={sp as Record<string, string>} />
               ))}
             </div>
           )}
@@ -108,17 +132,36 @@ export default async function Home({
           {pages > 1 && (
             <div className="pagination">
               {page > 0 && <Link className="page-btn" href={pageUrl(page - 1)}>‹</Link>}
-              {Array.from({ length: Math.min(pages, 8) }, (_, i) => (
-                <Link key={i} className={`page-btn${i === page ? " active" : ""}`} href={pageUrl(i)}>
-                  {i + 1}
-                </Link>
-              ))}
+              
+              {/* Show first page if not in window */}
+              {page > 2 && (
+                <>
+                  <Link className="page-btn" href={pageUrl(0)}>1</Link>
+                  {page > 3 && <span className="page-dots">...</span>}
+                </>
+              )}
+
+              {Array.from({ length: pages }, (_, i) => i)
+                .filter(i => i >= page - 2 && i <= page + 2)
+                .map(i => (
+                  <Link key={i} className={`page-btn${i === page ? " active" : ""}`} href={pageUrl(i)}>
+                    {i + 1}
+                  </Link>
+                ))}
+
+              {/* Show last page if not in window */}
+              {page < pages - 3 && (
+                <>
+                  {page < pages - 4 && <span className="page-dots">...</span>}
+                  <Link className="page-btn" href={pageUrl(pages - 1)}>{pages}</Link>
+                </>
+              )}
+
               {page < pages - 1 && <Link className="page-btn" href={pageUrl(page + 1)}>›</Link>}
             </div>
           )}
         </section>
       </div>
-      </main>
-  
+    </main>
   );
 }

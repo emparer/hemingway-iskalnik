@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { quickSearch } from "@/lib/ors";
+import { quickSearch } from "@/lib/ors-server";
 
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("query") || "";
