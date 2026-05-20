@@ -39,6 +39,7 @@ export default function Filters({ data }: Props) {
   const [maxPrice, setMaxPrice] = useState(priceMax);
   const [showAllCities, setShowAllCities] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, Set<string>>>({});
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   function snapshotSelectedFilters(params: typeof sp) {
     return {
@@ -56,6 +57,7 @@ export default function Filters({ data }: Props) {
 
   useEffect(() => {
     setSelectedFilters(snapshotSelectedFilters(sp));
+    setIsMobileFiltersOpen(false);
   }, [sp]);
 
   function pushFilter(key: string, value: string, checked: boolean) {
@@ -103,17 +105,43 @@ export default function Filters({ data }: Props) {
   }
 
   return (
-    <aside className="sidebar">
+    <>
+      <button
+        type="button"
+        className="mobile-filter-fab"
+        onClick={() => setIsMobileFiltersOpen(true)}
+        aria-label="Odpri filtre"
+      >
+        <span className="mobile-filter-fab-icon">⚲</span>
+        <span>Filtri</span>
+      </button>
+
+      <div
+        className={`mobile-filter-backdrop${isMobileFiltersOpen ? " open" : ""}`}
+        onClick={() => setIsMobileFiltersOpen(false)}
+      />
+
+      <aside className={`sidebar${isMobileFiltersOpen ? " mobile-open" : ""}`}>
       <div className="sidebar-header">
         <h3>Filtri</h3>
-        <button
-          type="button"
-          className="btn-light"
-          onClick={() => router.push(`?${resetParams.toString()}`, { scroll: false })}
-          style={{ padding: "10px 14px", fontSize: 12 }}
-        >
-          Ponastavi
-        </button>
+        <div className="sidebar-header-actions">
+          <button
+            type="button"
+            className="btn-light"
+            onClick={() => router.push(`?${resetParams.toString()}`, { scroll: false })}
+            style={{ padding: "10px 14px", fontSize: 12 }}
+          >
+            Ponastavi
+          </button>
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setIsMobileFiltersOpen(false)}
+            aria-label="Zapri filtre"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="filter-group">
@@ -250,6 +278,7 @@ export default function Filters({ data }: Props) {
           </button>
         </form>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -143,19 +143,19 @@ const formatDate = (dateStr: string) => {
       )}
 
       <div className="layout">
-        <section className="results-panel" style={{ gridColumn: "1/-1" }}>
+        <section className="results-panel results-panel-full">
           <div className="offer-header">
             <div className="eyebrow">{prod.Location?.RegionGroupName}</div>
             <div className="product-title-row">
               <h1>{name}</h1>
               {cat > 0 && (
-                <span className="card-chip product-stars" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                <span className="card-chip product-stars">
                   {Array.from({ length: Math.min(cat, 5) }).map((_, i) => (
                     <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#eab308">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                   ))}
-                  <span style={{ marginLeft: 3 }}>{cat}</span>
+                  <span>{cat}</span>
                 </span>
               )}
             </div>
@@ -168,10 +168,10 @@ const formatDate = (dateStr: string) => {
             </div>
           </div>
 
-          <div className="offer-box" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 30, padding: 30, borderRadius: 28 }}>
+          <div className="product-hero">
             <GalleryClient pictures={galleryPictures} alt={name} />
-            <aside className="product-side" style={{ borderRadius: 28, padding: 24, display: "flex", flexDirection: "column" }}>
-              <h3 style={{ marginBottom: 20 }}>Povzetek iskanja</h3>
+            <aside className="product-side">
+              <h3 className="product-side-title">Povzetek iskanja</h3>
               <div className="detail-stat-grid">
                 <div className="detail-stat">
                   <span>Tip poti</span>
@@ -193,8 +193,8 @@ const formatDate = (dateStr: string) => {
               <p className="muted">
                 Pregled ponudbe je prilagojen hitri primerjavi terminov, storitev in cene na osebo.
               </p>
-              <div style={{ marginTop: "auto" }}>
-                <a href="#dates" className="btn" style={{ display: "block", textAlign: "center" }}>
+              <div className="product-side-cta">
+                <a href="#dates" className="btn product-side-btn">
                   Preveri termine in cene
                 </a>
               </div>
@@ -236,8 +236,8 @@ const formatDate = (dateStr: string) => {
         </div>
       </section>
 
-      <section className="tabs" style={{ marginTop: 28, padding: 30, borderRadius: 28 }}>
-        <h2 style={{ marginBottom: 20, fontFamily: "var(--font-head)", fontSize: "2.4rem" }}>Opis ponudbe</h2>
+      <section className="tabs product-description">
+        <h2 className="product-description-title">Opis ponudbe</h2>
         {(infoData?.Description || prod.Description || prod.DescriptionSI) ? (
           <div
             className="rich-text"
@@ -246,7 +246,7 @@ const formatDate = (dateStr: string) => {
         ) : (
           <div className="rich-text">
             <p><strong>Cena vključuje:</strong> povraten let v izbran kraj, letališke in varnostne pristojbine, 20 kg oddane prtlagage, 5 kg ročne prtljage, prigrizek in napitek med poletom, predstavnika agencije v informacijski poslovalnici na letališču.</p>
-            <p style={{ marginTop: 12 }}>Opisi objektov so povzeti iz spletnih strani/brošur/informacij s strani partnerjev.</p>
+            <p className="product-description-note">Opisi objektov so povzeti iz spletnih strani/brošur/informacij s strani partnerjev.</p>
           </div>
         )}
       </section>

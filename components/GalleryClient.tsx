@@ -110,13 +110,13 @@ export default function GalleryClient({ pictures, alt = "" }: Props) {
   }
 
   return (
-    <div className="gallery-container" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%", overflow: "hidden" }}>
-      <div className="gallery-main-wrap" style={{ flex: 1, position: "relative", minHeight: 0 }}>
+    <div className="gallery-container">
+      <div className="gallery-main-wrap gallery-main-flex">
         <img
           className="gallery-main"
           src={activePicture}
           alt={alt}
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          style={{ objectFit: "contain" }}
           onLoad={() => {
             console.log("[GalleryClient] main image loaded:", activePicture);
           }}
@@ -153,19 +153,17 @@ export default function GalleryClient({ pictures, alt = "" }: Props) {
       </div>
 
       {validPictures.length > 1 && (
-        <div className="gallery-thumbs" style={{ display: "flex", overflowX: "auto", gap: 10, marginTop: 10, paddingBottom: 10 }}>
+        <div className="gallery-thumbs gallery-thumbs-scroll">
           {validPictures.map((pic, i) => (
             <button
               key={`${pic.full}-${i}`}
               type="button"
               className={`gallery-thumb${i === activeIndex ? " active" : ""}`}
               onClick={() => selectPicture(i, pic.full)}
-              style={{ flexShrink: 0, width: 80, height: 60, padding: 0, border: i === activeIndex ? "2px solid var(--c)" : "none", overflow: "hidden", borderRadius: 8 }}
             >
               <img
                 src={pic.thumb || pic.full}
                 alt=""
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 onLoad={() => {
                   console.log("[GalleryClient] thumbnail loaded:", pic.thumb || pic.full);
                 }}

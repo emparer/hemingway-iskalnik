@@ -90,6 +90,7 @@ export default function SearchBox({
   const [selectedSuggestion, setSelectedSuggestion] = useState<SearchSuggestion | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isQueryFocused, setIsQueryFocused] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(true);
 
   useEffect(() => {
     setQuery(defaultQuery);
@@ -98,6 +99,25 @@ export default function SearchBox({
     setAdultCount(defaultAdultCount);
     setActiveType(type);
   }, [defaultAdultCount, defaultEndDate, defaultQuery, defaultStartDate, type]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const media = window.matchMedia("(max-width: 760px)");
+
+    const syncMobileState = (matches: boolean) => {
+      setIsMobileSearchOpen(!matches);
+    };
+
+    syncMobileState(media.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      syncMobileState(event.matches);
+    };
+
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     const trimmedQuery = query.trim();
@@ -304,6 +324,9 @@ export default function SearchBox({
     codes.forEach(c => params.append("ServiceCodes[]", c));
 
     setShowSuggestions(false);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches) {
+      setIsMobileSearchOpen(false);
+    }
     router.push("/?" + params.toString());
   }
 
@@ -328,10 +351,17 @@ export default function SearchBox({
         ))}
       </div>
 
-      {/* No summary when compact or empty */}
+      <button
+        type="button"
+        className="search-mobile-toggle"
+        onClick={() => setIsMobileSearchOpen(current => !current)}
+        aria-expanded={isMobileSearchOpen}
+      >
+        <span>{isMobileSearchOpen ? "Skrij iskalnik" : "Prikaži iskalnik"}</span>
+        <span className={`search-mobile-toggle-icon${isMobileSearchOpen ? " open" : ""}`}>⌄</span>
+      </button>
 
-
-      <form onSubmit={handleSearch} className="search-form">
+      <form onSubmit={handleSearch} className={`search-form${isMobileSearchOpen ? "" : " mobile-collapsed"}`}>
         <div className="search-grid">
           <div className="sg-field sg-field-destination">
             <label>Destinacija ali kraj</label>

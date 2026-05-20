@@ -43,8 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="toolbar footerbar">
             <div className="container footer-inner">
               <span>Vse pravice pridržane. © Hemingway d.o.o.</span>
-              <a href="https://mtravel.si" target="_blank" rel="noopener">
-                mtravel.si
+              <a href="https://pangersic.com" target="_blank" rel="noopener">
+                pangersic.com
               </a>
             </div>
           </footer>

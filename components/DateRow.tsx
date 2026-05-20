@@ -175,8 +175,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
         
         {!verified && (
           <button 
-            className="btn"
-            style={{ padding: "7px 12px", fontSize: 12, whiteSpace: "nowrap" }}
+            className="btn date-row-action"
             onClick={handleVerify}
             disabled={loading}
           >
@@ -186,8 +185,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
 
         {verified && (
           <Link
-            className="btn"
-            style={{ padding: "7px 12px", fontSize: 12, whiteSpace: "nowrap", background: "var(--c)" }}
+            className="btn date-row-action"
             href={`/checkout/${tourOpEnc}/${hashEnc}?${qs}`}
           >
             Rezerviraj
