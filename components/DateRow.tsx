@@ -61,20 +61,7 @@ function formatDate(dateStr: string) {
   return dateStr;
 }
 
-function formatPassengerType(type: string) {
-  if (type === "D") return "otrok";
-  if (type === "H") return "odrasli";
-  if (type === "F") return "ženska";
-  return type || "potnik";
-}
-
-function formatPassengerLabel(type: string, index: number) {
-  const passengerType = formatPassengerType(type);
-
-  if (passengerType === "otrok") return `Otrok ${index}`;
-  if (passengerType === "odrasli") return `Odrasli ${index}`;
-  if (passengerType === "ženska") return `Potnica ${index}`;
-
+function formatPassengerLabel(index: number) {
   return `Potnik ${index}`;
 }
 
@@ -241,7 +228,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
               {travelers.length > 0 ? (
                 travelers.map(([key, traveler]: [string, any], index: number) => (
                   <div key={key} className="verified-list-row">
-                    <span>{formatPassengerLabel(traveler.PassengerType, index + 1)}</span>
+                    <span>{formatPassengerLabel(index + 1)}</span>
                     <strong>{formatCurrency(Number(traveler.Price || perPersonPrice))}</strong>
                   </div>
                 ))

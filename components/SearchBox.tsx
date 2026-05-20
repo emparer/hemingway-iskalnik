@@ -333,10 +333,11 @@ export default function SearchBox({
 
       <form onSubmit={handleSearch} className="search-form">
         <div className="search-grid">
-          <div className="sg-field">
+          <div className="sg-field sg-field-destination">
             <label>Destinacija ali kraj</label>
             <div className="search-autocomplete">
               <input
+                className="sg-control"
                 type="text"
                 value={query}
                 onChange={e => {
@@ -388,27 +389,29 @@ export default function SearchBox({
               )}
             </div>
           </div>
-          <div className="sg-field">
-            <label>Najzgodnejši odhod</label>
+          <div className="sg-field sg-field-start-date">
+            <label>Odhod od</label>
             <input
+              className="sg-control"
               type="text"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
               placeholder="DD.MM.LLLL"
             />
           </div>
-          <div className="sg-field">
-            <label>Najkasnejši povratek</label>
+          <div className="sg-field sg-field-end-date">
+            <label>Prihod do</label>
             <input
+              className="sg-control"
               type="text"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
               placeholder="DD.MM.LLLL"
             />
           </div>
-          <div className="sg-field">
+          <div className="sg-field sg-field-duration">
             <label>Trajanje</label>
-            <select value={duration} onChange={e => setDuration(e.target.value)}>
+            <select className="sg-control sg-select" value={duration} onChange={e => setDuration(e.target.value)}>
               <option value="">Izberite</option>
               <option value="2-6">2-6 dni</option>
               <option value="7-9">7-9 dni</option>
@@ -417,9 +420,9 @@ export default function SearchBox({
           </div>
 
           {activeType === "pauschal" && (
-            <div className="sg-field">
+            <div className="sg-field sg-field-airport">
               <label>Letališče</label>
-              <select value={airport} onChange={e => setAirport(e.target.value)}>
+              <select className="sg-control sg-select" value={airport} onChange={e => setAirport(e.target.value)}>
                 <option value="">Vsa letališča</option>
                 <option value="LJU">Ljubljana (LJU)</option>
                 <option value="VIE">Dunaj (VIE)</option>
@@ -431,18 +434,18 @@ export default function SearchBox({
             </div>
           )}
 
-          <div className="sg-field">
+          <div className="sg-field sg-field-adults">
             <label>Odrasli</label>
-            <select value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
+            <select className="sg-control sg-select" value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
               {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
 
           {(activeType === "pauschal" || activeType === "hotel") && (
             <>
-              <div className="sg-field">
+              <div className="sg-field sg-field-service">
                 <label>Tip namestitve</label>
-                <select value={minService} onChange={e => setMinService(e.target.value)}>
+                <select className="sg-control sg-select" value={minService} onChange={e => setMinService(e.target.value)}>
                   <option value="">Vseeno</option>
                   <option value="OV">Vsaj nočitev</option>
                   <option value="BB">Vsaj nočitev z zajtrkom</option>
@@ -450,9 +453,9 @@ export default function SearchBox({
                   <option value="AI">Vse vključeno</option>
                 </select>
               </div>
-              <div className="sg-field">
+              <div className="sg-field sg-field-category">
                 <label>Kategorija hotela</label>
-                <select value={minCategory} onChange={e => setMinCategory(e.target.value)}>
+                <select className="sg-control sg-select" value={minCategory} onChange={e => setMinCategory(e.target.value)}>
                   <option value="">Vseeno</option>
                   {[1, 2, 3, 4, 5].map(n => (
                     <option key={n} value={n}>{n}* ali več</option>
@@ -463,9 +466,9 @@ export default function SearchBox({
           )}
 
           {activeType === "trips" && (
-            <div className="sg-field">
+            <div className="sg-field sg-field-subtype">
               <label>Tip potovanja</label>
-              <select value={subType} onChange={e => setSubType(e.target.value)}>
+              <select className="sg-control sg-select" value={subType} onChange={e => setSubType(e.target.value)}>
                 <option value="">Vseeno</option>
                 <option value="avtobus+letalo">avtobus + letalo</option>
                 <option value="avtobus+letalo+ladja">avtobus + letalo + ladja</option>

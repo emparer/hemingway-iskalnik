@@ -134,7 +134,6 @@ const formatDate = (dateStr: string) => {
         defaultEndDate={sp.EndDate || "18.05.2027"}
         defaultAdultCount={Number(sp.AdultCount || 2)}
         type={sp.type || "pauschal"}
-        compact={true}
       />
 
       {(productData.usingMock || dateData.usingMock) && (
@@ -147,18 +146,20 @@ const formatDate = (dateStr: string) => {
         <section className="results-panel" style={{ gridColumn: "1/-1" }}>
           <div className="offer-header">
             <div className="eyebrow">{prod.Location?.RegionGroupName}</div>
-            <h1>{name}</h1>
-            <div className="product-meta">
+            <div className="product-title-row">
+              <h1>{name}</h1>
               {cat > 0 && (
-                <span className="card-chip" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                <span className="card-chip product-stars" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                   {Array.from({ length: Math.min(cat, 5) }).map((_, i) => (
                     <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#eab308">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                   ))}
-                  <span style={{ marginLeft: 3 }}>{cat} zvezdic</span>
+                  <span style={{ marginLeft: 3 }}>{cat}</span>
                 </span>
               )}
+            </div>
+            <div className="product-meta">
               {rating > 0 && (
                 <span className="rating-badge" style={{ background: ratingBg, color: ratingColor }}>
                   Ocena {rating}/10
@@ -181,11 +182,11 @@ const formatDate = (dateStr: string) => {
                   <strong>{sp.AdultCount || 2} odrasli</strong>
                 </div>
                 <div className="detail-stat">
-                  <span>Odhodno okno</span>
+                  <span>Odhod med</span>
                   <strong>{formatDate(sp.StartDate || "19.05.2026")}</strong>
                 </div>
                 <div className="detail-stat">
-                  <span>Povratno okno</span>
+                  <span>Povratek do</span>
                   <strong>{formatDate(sp.EndDate || "18.05.2027")}</strong>
                 </div>
               </div>
@@ -204,15 +205,6 @@ const formatDate = (dateStr: string) => {
 
       <section className="tabs" id="dates">
         <h2>Termini in cene</h2>
-        <div className="date-row-header">
-          <b>Odhod</b>
-          <b>Povratek</b>
-          <b>Dni</b>
-          <b>Soba</b>
-          <b>Storitev</b>
-          <b>Cena / os.</b>
-          <span />
-        </div>
 
         {dates.length === 0 && (
           <div style={{ padding: "24px 4px", color: "var(--muted)", fontSize: 14 }}>

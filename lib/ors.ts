@@ -4,6 +4,7 @@ export const ORS_API_BASE =
   process.env.ORS_API_BASE ||
   (process.env.ORS_API_URL ? `${process.env.ORS_API_URL}/crs/v2` : "https://api.ors.si/crs/v2");
 export const ORS_API_KEY  = process.env.ORS_API_KEY || "";
+const ORS_LANGUAGE = "si";
 const MAX_GLOBAL_SORT_RESULTS = 500;
 
 type SearchParams = Record<string, any>;
@@ -74,6 +75,7 @@ function buildSearchPayload(params: SearchParams) {
   }
 
   const payload: Record<string, any> = {
+    Language: params.Language || "si",
     StartDate: params.StartDate || "19.05.2026",
     EndDate: params.EndDate || "18.05.2027",
     AdultCount: toNumberIfPossible(params.AdultCount || 2),
@@ -165,6 +167,7 @@ export async function orsPost(path: string, payload: Record<string, any>) {
       "X-Api-Key": ORS_API_KEY,
       "Content-Type": "application/json",
       "Accept": "application/json",
+      "Accept-Language": ORS_LANGUAGE,
     },
     body: JSON.stringify(payload),
     cache: "no-store",
@@ -277,6 +280,7 @@ export async function getProductInfo(params: {
     headers: {
       "X-Api-Key": ORS_API_KEY,
       Accept: "application/json",
+      "Accept-Language": ORS_LANGUAGE,
     },
     cache: "no-store",
   });
@@ -325,6 +329,7 @@ export async function registerOffer(
       "X-Api-Key": ORS_API_KEY,
       "Content-Type": "application/json",
       Accept: "application/json",
+      "Accept-Language": ORS_LANGUAGE,
     },
     body: JSON.stringify(payload),
     cache: "no-store",

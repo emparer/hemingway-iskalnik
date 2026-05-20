@@ -192,6 +192,7 @@ img { display: block; max-width: 100%; }
 }
 .btn-search:hover { transform: translateY(-1px); }
 
+.sg-control,
 input[type="text"],
 input[type="email"],
 input[type="tel"],
@@ -200,7 +201,9 @@ input[type="range"],
 select,
 textarea {
   width: 100%;
+  font: inherit;
 }
+.sg-control,
 input[type="text"],
 input[type="email"],
 input[type="tel"],
@@ -214,7 +217,27 @@ textarea {
   background: rgba(255, 255, 255, 0.96);
   color: var(--ink);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  appearance: auto;
+  -webkit-text-fill-color: var(--ink);
+}
+.search-form .sg-control {
+  -webkit-appearance: none;
+  appearance: none;
+  background-clip: padding-box;
+}
+.sg-select {
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3 5.5L7 9.5L11 5.5' stroke='%23732a32' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  background-color: rgba(255, 255, 255, 0.96);
+  cursor: pointer;
+}
+.search-form .sg-select {
+  line-height: 1.2;
+}
+.sg-select::-ms-expand {
+  display: none;
 }
 input:focus,
 select:focus,
@@ -396,9 +419,23 @@ textarea {
 }
 .search-grid {
   display: grid;
-  grid-template-columns: 1.8fr repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: 1.8fr repeat(5, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
+}
+.sg-field-destination { grid-column: 1; grid-row: 1; }
+.sg-field-start-date { grid-column: 2; grid-row: 1; }
+.sg-field-end-date { grid-column: 3; grid-row: 1; }
+.sg-field-duration { grid-column: 4; grid-row: 1; }
+.sg-field-airport,
+.sg-field-subtype { grid-column: 5; grid-row: 1; }
+.sg-field-adults { grid-column: 6; grid-row: 1; }
+.sg-field-service { grid-column: 1; grid-row: 2; }
+.sg-field-category { grid-column: 2; grid-row: 2; }
+.search-grid > .btn-search {
+  grid-column: 6;
+  grid-row: 2;
+  width: 100%;
 }
 .sg-field { display: flex; flex-direction: column; }
 .search-autocomplete {
@@ -889,6 +926,9 @@ textarea {
   object-fit: cover;
 }
 
+.offer-header {
+  padding-left: 18px;
+}
 .product-side {
   border-radius: 32px;
   padding: 28px;
@@ -900,6 +940,23 @@ textarea {
   font-family: var(--font-head);
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   line-height: 0.92;
+}
+.product-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.product-title-row h1 {
+  margin: 0;
+  padding-left: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: fit-content;
+}
+.product-stars {
+  flex: 0 0 auto;
+  margin-top: 8px;
 }
 .product-meta {
   display: flex;
@@ -1563,6 +1620,28 @@ textarea {
   .detail-stat-grid,
   .date-row-summary,
   .date-row-header { grid-template-columns: 1fr; }
+  .offer-header {
+    padding-left: 0;
+  }
+  .product-title-row {
+    flex-wrap: wrap;
+  }
+  .product-stars {
+    margin-top: 0;
+  }
+  .sg-field-destination,
+  .sg-field-start-date,
+  .sg-field-end-date,
+  .sg-field-duration,
+  .sg-field-airport,
+  .sg-field-subtype,
+  .sg-field-adults,
+  .sg-field-service,
+  .sg-field-category,
+  .search-grid > .btn-search {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .verified-head,
   .verified-list-row {
     flex-direction: column;
