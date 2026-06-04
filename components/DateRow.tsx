@@ -120,7 +120,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
       if (isReservationPossible(result)) {
         setVerified(result);
       } else {
-        setError(result.StatusCode?.Text || result.error || "Ponudba ni več na voljo.");
+        setError(result.error || "Ponudba ni več na voljo.");
       }
     } catch (err: any) {
       setError(err?.message || "Preverjanje ni uspelo.");
@@ -215,9 +215,6 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
               <span>Storitev: {serviceName}</span>
               {service.DepartureAirportName && service.ArrivalAirportName && (
                 <span>Relacija: {service.DepartureAirportName} - {service.ArrivalAirportName}</span>
-              )}
-              {verified?.StatusCode?.Text && (
-                <span>Status: {verified.StatusCode.Text}</span>
               )}
             </div>
 

@@ -44,6 +44,10 @@ export async function POST(req: NextRequest) {
   }
 
   const termsAccepted = form.get("terms") === "on";
+  const selectedExtraServices = form
+    .getAll("extraServices")
+    .map(value => String(value).trim())
+    .filter(Boolean);
 
   console.log("[checkout] terms accepted:", termsAccepted);
 
@@ -53,6 +57,14 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+
+  const note = String(form.get("note") || "").trim();
+  const extraServiceNotes = selectedExtraServices.length
+    ? ["Izbrane dodatne storitve:", ...selectedExtraServices.map(service => `- ${service}`)].join("\n")
+    : "";
+  const comments = note.includes("Izbrane dodatne storitve:")
+    ? note
+    : [note, extraServiceNotes].filter(Boolean).join("\n\n");
 
   const travelers: Record<string, any> = {};
 
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     Travelers: travelers,
 
-    Comments: String(form.get("note") || ""),
+    Comments: comments,
 
     Customer: {
       IsCompany: false,

@@ -1,5 +1,6 @@
 //app/checkout/[tourOperator]/[hashCode]/page.tsx
 import { verifyOffer } from "@/lib/ors";
+import CheckoutExtrasNote from "@/components/CheckoutExtrasNote";
 
 function parsePriceValue(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -17,6 +18,13 @@ function parsePriceValue(value: unknown) {
   }
 
   return undefined;
+}
+
+function formatCurrency(value: unknown) {
+  const parsed = typeof value === "number" ? value : Number(value);
+  const safeValue = Number.isFinite(parsed) ? parsed : 0;
+
+  return safeValue.toLocaleString("sl-SI", { style: "currency", currency: "EUR" });
 }
 
 export default async function CheckoutPage({
@@ -41,6 +49,7 @@ export default async function CheckoutPage({
     1118;
   const registrationFee = 20;
   const total = offerPrice + registrationFee;
+  const extraServices = Array.isArray(verify.ExtraServices) ? verify.ExtraServices : [];
 
   return (
     <main className="container page-shell">
@@ -136,14 +145,11 @@ export default async function CheckoutPage({
             <div className="checkout-section-head">
               <div>
                 <p className="checkout-kicker">Korak 3</p>
-                <h2>Dodatne želje</h2>
+                <h2>Dodatne storitve in želje</h2>
               </div>
-              <p>Po želji dopišite opombe ali posebne zahteve za organizatorja.</p>
+              <p>Izberite dodatne storitve in po želji dopišite opombe ali posebne zahteve za organizatorja.</p>
             </div>
-            <div className="form-field">
-              <label>Sporočilo organizatorju</label>
-              <textarea name="note" rows={5} placeholder="Npr. želena ura leta, sedenje skupaj, posebne opombe ..." />
-            </div>
+            <CheckoutExtrasNote extraServices={extraServices} />
           </div>
 
           <div className="checkout-box">
