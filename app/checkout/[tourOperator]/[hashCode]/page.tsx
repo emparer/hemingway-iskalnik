@@ -32,7 +32,7 @@ export default async function CheckoutPage({
   searchParams,
 }: {
   params: Promise<{ tourOperator: string; hashCode: string }>;
-  searchParams: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { tourOperator, hashCode } = await params;
   const sp = await searchParams;
@@ -50,6 +50,11 @@ export default async function CheckoutPage({
   const registrationFee = 20;
   const total = offerPrice + registrationFee;
   const extraServices = Array.isArray(verify.ExtraServices) ? verify.ExtraServices : [];
+  const initialSelectedExtraValues = Array.isArray(sp.extraServices)
+    ? sp.extraServices.map(value => String(value))
+    : sp.extraServices
+      ? [String(sp.extraServices)]
+      : [];
 
   return (
     <main className="container page-shell">
@@ -149,7 +154,11 @@ export default async function CheckoutPage({
               </div>
               <p>Izberite dodatne storitve in po želji dopišite opombe ali posebne zahteve za organizatorja.</p>
             </div>
-            <CheckoutExtrasNote extraServices={extraServices} />
+            <CheckoutExtrasNote
+              extraServices={extraServices}
+              initialSelectedValues={initialSelectedExtraValues}
+              showCheckboxes={false}
+            />
           </div>
 
           <div className="checkout-box">

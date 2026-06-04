@@ -1521,6 +1521,22 @@ textarea {
 .choice-card input {
   accent-color: var(--c);
 }
+.extra-service-line {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.extra-service-line strong,
+.extra-service-line span {
+  min-width: 0;
+}
+.extra-service-line span {
+  color: var(--muted);
+  white-space: nowrap;
+}
 .choice-card-strong {
   background: linear-gradient(135deg, rgba(139, 53, 63, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
 }

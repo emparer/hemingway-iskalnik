@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CheckoutExtrasNote from "@/components/CheckoutExtrasNote";
 
 interface Props {
   d: any;
@@ -98,6 +99,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedExtraLabels, setSelectedExtraLabels] = useState<string[]>([]);
 
   async function handleVerify() {
     setLoading(true);
@@ -145,6 +147,12 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
   const offerName = service.OfferName || d.ProductName || "Ponudba";
   const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ");
 
+  const checkoutHref = (() => {
+    const searchParams = new URLSearchParams(qs);
+    selectedExtraLabels.forEach(value => searchParams.append("extraServices", value));
+    return `/checkout/${tourOpEnc}/${hashEnc}?${searchParams.toString()}`;
+  })();
+
   return (
     <div className={`date-row${verified ? " date-row-verified" : ""}`}>
       <div className="date-row-summary">
@@ -186,7 +194,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
         {verified && (
           <Link
             className="btn date-row-action"
-            href={`/checkout/${tourOpEnc}/${hashEnc}?${qs}`}
+            href={checkoutHref}
           >
             Rezerviraj
           </Link>
@@ -249,12 +257,19 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
             <div className="verified-card">
               <span className="verified-card-label">Dodatne storitve</span>
               {extras.length > 0 ? (
-                extras.map((extra: any) => (
-                  <div key={`${extra.Code}-${extra.Name}`} className="verified-list-row">
-                    <span>{extra.Name}</span>
-                    <strong>{formatCurrency(Number(extra.Price || extra.Amount || 0))}</strong>
-                  </div>
-                ))
+                <CheckoutExtrasNote
+                  extraServices={extras}
+                  initialSelectedValues={selectedExtraLabels}
+                  showTextarea={false}
+                  onSelectionChange={(_, labels) => {
+                    setSelectedExtraLabels((current) => {
+                      const same =
+                        current.length === labels.length &&
+                        current.every((value, index) => value === labels[index]);
+                      return same ? current : labels;
+                    });
+                  }}
+                />
               ) : (
                 <span>Brez dodatnih storitev.</span>
               )}

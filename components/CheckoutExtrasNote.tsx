@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ExtraService = {
   Code?: string;
@@ -11,6 +11,10 @@ type ExtraService = {
 
 interface Props {
   extraServices: ExtraService[];
+  initialSelectedValues?: string[];
+  showCheckboxes?: boolean;
+  showTextarea?: boolean;
+  onSelectionChange?: (selectedValues: string[], selectedLabels: string[]) => void;
 }
 
 const EXTRA_NOTE_HEADER = "Izbrane dodatne storitve:";
@@ -50,32 +54,47 @@ function stripExtraBlock(text: string) {
   return text;
 }
 
-export default function CheckoutExtrasNote({ extraServices }: Props) {
+export default function CheckoutExtrasNote({
+  extraServices,
+  initialSelectedValues = [],
+  showCheckboxes = true,
+  showTextarea = true,
+  onSelectionChange,
+}: Props) {
   const services = extraServices.map((extra, index) => {
-    const id = extra.Code ? String(extra.Code) : `${extra.Name || "extra"}-${index}`;
-
     return {
-      id,
       label: extra.Name || "Dodatna storitev",
       price: extra.Price ?? extra.Amount ?? 0,
     };
   });
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [noteText, setNoteText] = useState("");
-
-  function handleToggle(serviceId: string) {
-    const nextSelectedIds = selectedIds.includes(serviceId)
-      ? selectedIds.filter(id => id !== serviceId)
-      : [...selectedIds, serviceId];
-
-    const baseNote = stripExtraBlock(noteText);
-    const selectedLabels = services
-      .filter(service => nextSelectedIds.includes(service.id))
+  const [selectedLabels, setSelectedLabels] = useState<string[]>(initialSelectedValues);
+  const [noteText, setNoteText] = useState(() => {
+    const initialLabels = services
+      .filter(service => initialSelectedValues.includes(service.label))
       .map(service => service.label);
 
-    setSelectedIds(nextSelectedIds);
-    setNoteText(composeNote(baseNote, selectedLabels));
+    return composeNote("", initialLabels);
+  });
+
+  useEffect(() => {
+    if (!onSelectionChange) return;
+
+    onSelectionChange(selectedLabels, selectedLabels);
+  }, [onSelectionChange, selectedLabels, services]);
+
+  function handleToggle(serviceLabel: string) {
+    const nextSelectedLabels = selectedLabels.includes(serviceLabel)
+      ? selectedLabels.filter(label => label !== serviceLabel)
+      : [...selectedLabels, serviceLabel];
+
+    const baseNote = stripExtraBlock(noteText);
+    const nextLabels = services
+      .filter(service => nextSelectedLabels.includes(service.label))
+      .map(service => service.label);
+
+    setSelectedLabels(nextSelectedLabels);
+    setNoteText(composeNote(baseNote, nextLabels));
   }
 
   function handleNoteChange(value: string) {
@@ -84,37 +103,38 @@ export default function CheckoutExtrasNote({ extraServices }: Props) {
 
   return (
     <>
-      {services.length > 0 && (
+      {showCheckboxes && services.length > 0 && (
         <div className="choice-stack" style={{ marginBottom: 16 }}>
           {services.map(service => (
-            <label className="check-terms choice-card" key={service.id}>
+            <label className="check-terms choice-card" key={service.label}>
               <input
+                name="extraServices"
                 type="checkbox"
-                checked={selectedIds.includes(service.id)}
-                onChange={() => handleToggle(service.id)}
+                value={service.label}
+                checked={selectedLabels.includes(service.label)}
+                onChange={() => handleToggle(service.label)}
               />
-              <span>
+              <span className="extra-service-line">
                 <strong>{service.label}</strong>
-                <br />
-                <span style={{ color: "var(--muted)" }}>
-                  {formatCurrency(service.price)}
-                </span>
+                <span>{formatCurrency(service.price)}</span>
               </span>
             </label>
           ))}
         </div>
       )}
 
-      <div className="form-field">
-        <label>Sporočilo organizatorju</label>
-        <textarea
-          name="note"
-          rows={5}
-          value={noteText}
-          onChange={e => handleNoteChange(e.target.value)}
-          placeholder="Npr. želena ura leta, sedenje skupaj, posebne opombe ..."
-        />
-      </div>
+      {showTextarea && (
+        <div className="form-field">
+          <label>Sporočilo organizatorju</label>
+          <textarea
+            name="note"
+            rows={5}
+            value={noteText}
+            onChange={e => handleNoteChange(e.target.value)}
+            placeholder="Npr. želena ura leta, sedenje skupaj, posebne opombe ..."
+          />
+        </div>
+      )}
     </>
   );
 }
