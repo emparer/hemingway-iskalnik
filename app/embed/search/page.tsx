@@ -1,0 +1,33 @@
+import SearchBox from "@/components/SearchBox";
+
+function pickParam(value: string | string[] | undefined, fallback: string) {
+  if (Array.isArray(value)) return value[0] || fallback;
+  return value || fallback;
+}
+
+export default async function EmbedSearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const canonicalBaseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://hemingway-iskalnik.vercel.app";
+
+  return (
+    <main className="container embed-page-shell">
+      <SearchBox
+        compact
+        submitMode="external"
+        externalBaseUrl={canonicalBaseUrl}
+        defaultQuery={pickParam(sp.query, "Turčija")}
+        defaultRegionGroup={pickParam(sp.RegionGroup, "724")}
+        defaultStartDate={pickParam(sp.StartDate, "19.05.2026")}
+        defaultEndDate={pickParam(sp.EndDate, "18.05.2027")}
+        defaultAdultCount={Number(pickParam(sp.AdultCount, "2"))}
+        type={pickParam(sp.type, "pauschal")}
+      />
+    </main>
+  );
+}

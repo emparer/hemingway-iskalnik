@@ -12,6 +12,8 @@ interface Props {
   defaultAdultCount?: number;
   type?: string;
   compact?: boolean;
+  submitMode?: "internal" | "external";
+  externalBaseUrl?: string;
 }
 
 interface QuickSearchLocation {
@@ -70,6 +72,8 @@ export default function SearchBox({
   defaultAdultCount = 2,
   type = "pauschal",
   compact = false,
+  submitMode = "internal",
+  externalBaseUrl = "https://hemingway-iskalnik.vercel.app",
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -279,9 +283,7 @@ export default function SearchBox({
     return [];
   }
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const target = await resolveSearchTarget();
+  function buildSearchParams(target: Awaited<ReturnType<typeof resolveSearchTarget>>) {
     const params = new URLSearchParams(searchParams.toString());
 
     [
@@ -323,11 +325,39 @@ export default function SearchBox({
     const codes = getServiceCodes(minService);
     codes.forEach(c => params.append("ServiceCodes[]", c));
 
+    return params;
+  }
+
+  function buildSearchUrl(target: Awaited<ReturnType<typeof resolveSearchTarget>>) {
+    const params = buildSearchParams(target);
+    const base = externalBaseUrl.replace(/\/$/, "");
+    return `${base}/?${params.toString()}`;
+  }
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const popup = submitMode === "external" && typeof window !== "undefined"
+      ? window.open("about:blank", "_blank")
+      : null;
+    const target = await resolveSearchTarget();
+    const url = buildSearchUrl(target);
+
     setShowSuggestions(false);
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches) {
       setIsMobileSearchOpen(false);
     }
-    router.push("/?" + params.toString());
+
+    if (submitMode === "external") {
+      if (popup) {
+        popup.opener = null;
+        popup.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+      return;
+    }
+
+    router.push("/?" + buildSearchParams(target).toString());
   }
 
   const typeOptions = [

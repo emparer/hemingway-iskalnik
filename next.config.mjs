@@ -7,7 +7,26 @@ const nextConfig = {
       { protocol: "https", hostname: "api.bookinitsystem.com" },
       { protocol: "https", hostname: "iskalnik.hemingway.si" }
     ]
-  }
+  },
+  async headers() {
+    const frameAncestors =
+      process.env.EMBED_FRAME_ANCESTORS?.split(/[\s,]+/)
+        .map(entry => entry.trim())
+        .filter(Boolean)
+        .join(" ") || "*";
+
+    return [
+      {
+        source: "/embed/search",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors ${frameAncestors}`,
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
