@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Props {
   defaultQuery?: string;
@@ -64,6 +64,30 @@ function normalizeSearchValue(value?: string) {
     .replace(/\p{Diacritic}/gu, "");
 }
 
+function SlovenianToIsoDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split(".");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = parts[1].padStart(2, "0");
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  return "";
+}
+
+function IsoToSlovenianDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    return `${day}.${month}.${year}`;
+  }
+  return "";
+}
+
 export default function SearchBox({
   defaultQuery = "",
   defaultRegionGroup = "724",
@@ -96,6 +120,8 @@ export default function SearchBox({
   const [isQueryFocused, setIsQueryFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(true);
 
+  const ignoreNextQueryEffectRef = useRef(false);
+
   useEffect(() => {
     setQuery(defaultQuery);
     setStartDate(defaultStartDate);
@@ -124,16 +150,14 @@ export default function SearchBox({
   }, []);
 
   useEffect(() => {
-    const trimmedQuery = query.trim();
-
-    if (trimmedQuery.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setIsSuggesting(false);
+    if (ignoreNextQueryEffectRef.current) {
+      ignoreNextQueryEffectRef.current = false;
       return;
     }
 
-    if (selectedSuggestion && trimmedQuery === selectedSuggestion.label.trim()) {
+    const trimmedQuery = query.trim();
+
+    if (trimmedQuery.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       setIsSuggesting(false);
@@ -441,6 +465,7 @@ export default function SearchBox({
                         setQuery(item.label);
                         setSelectedSuggestion(item);
                         setShowSuggestions(false);
+                        ignoreNextQueryEffectRef.current = true;
                       }}
                     >
                       <span className="search-suggestion-main">
@@ -460,20 +485,18 @@ export default function SearchBox({
             <label>Odhod od</label>
             <input
               className="sg-control"
-              type="text"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              placeholder="DD.MM.LLLL"
+              type="date"
+              value={SlovenianToIsoDate(startDate)}
+              onChange={e => setStartDate(IsoToSlovenianDate(e.target.value))}
             />
           </div>
           <div className="sg-field sg-field-end-date">
             <label>Prihod do</label>
             <input
               className="sg-control"
-              type="text"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              placeholder="DD.MM.LLLL"
+              type="date"
+              value={SlovenianToIsoDate(endDate)}
+              onChange={e => setEndDate(IsoToSlovenianDate(e.target.value))}
             />
           </div>
           <div className="sg-field sg-field-duration">

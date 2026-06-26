@@ -7,7 +7,18 @@ export default function IframeResizer() {
     if (typeof window === "undefined" || !window.parent) return;
 
     const sendHeight = () => {
-      const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+      let height = document.documentElement.scrollHeight || document.body.scrollHeight;
+
+      // Ensure that if the autocomplete dropdown is open, the iframe grows to show it
+      const suggestionsEl = document.querySelector(".search-suggestions") as HTMLElement;
+      if (suggestionsEl) {
+        const rect = suggestionsEl.getBoundingClientRect();
+        const suggestionsBottom = rect.bottom + window.scrollY;
+        if (suggestionsBottom > height) {
+          height = Math.ceil(suggestionsBottom) + 16; // 16px padding buffer
+        }
+      }
+
       window.parent.postMessage(
         { type: "HEMINGWAY_SEARCH_RESIZE", height },
         "*"
@@ -17,19 +28,26 @@ export default function IframeResizer() {
     // Send initial height
     sendHeight();
 
-    // Set up a resize observer to capture any dynamic layout shifts, 
-    // autocomplete suggestions, or device rotation changes.
-    const observer = new ResizeObserver(() => {
+    // Watch for size changes
+    const resizeObserver = new ResizeObserver(() => {
       sendHeight();
     });
-    
-    observer.observe(document.body);
+    resizeObserver.observe(document.body);
 
-    // Also trigger on load just in case assets like fonts shift the layout
+    // Watch for DOM mutations (like showing/hiding suggestions)
+    const mutationObserver = new MutationObserver(() => {
+      sendHeight();
+    });
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
     window.addEventListener("load", sendHeight);
 
     return () => {
-      observer.disconnect();
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
       window.removeEventListener("load", sendHeight);
     };
   }, []);

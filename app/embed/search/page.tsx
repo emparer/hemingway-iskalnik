@@ -18,6 +18,12 @@ export default async function EmbedSearchPage({
 
   return (
     <main className="container embed-page-shell">
+      <style>{`
+        html, body {
+          background: transparent !important;
+          min-height: auto !important;
+        }
+      `}</style>
       <IframeResizer />
       <SearchBox
         compact
