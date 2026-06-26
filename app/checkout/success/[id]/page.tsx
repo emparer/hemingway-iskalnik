@@ -3,10 +3,16 @@ import Link from "next/link";
 
 export default async function CheckoutSuccessPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const bookingCode = typeof sp.bookingCode === "string" ? sp.bookingCode : "";
+  const requestId = typeof sp.requestId === "string" ? sp.requestId : "";
+  const reference = decodeURIComponent(id);
 
   return (
     <main className="container">
@@ -18,8 +24,14 @@ export default async function CheckoutSuccessPage({
         </p>
 
         <p className="muted" style={{ marginTop: 12 }}>
-          Referenca povpraševanja: <strong>{decodeURIComponent(id)}</strong>
+          Referenca povpraševanja: <strong>{bookingCode || reference}</strong>
         </p>
+
+        {requestId && requestId !== bookingCode && (
+          <p className="muted" style={{ marginTop: 12 }}>
+            Request ID: <strong>{requestId}</strong>
+          </p>
+        )}
 
         <p className="muted" style={{ marginTop: 12 }}>
           Naši svetovalci bodo preverili razpoložljivost in vas kontaktirali v najkrajšem možnem času za potrditev rezervacije.

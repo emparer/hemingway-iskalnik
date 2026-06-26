@@ -1,6 +1,7 @@
 //app/api/checkout/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { registerOffer } from "@/lib/ors";
+import { getCheckoutReference } from "@/lib/checkout-reference";
 
 function slDateToIso(date: string) {
   const cleaned = date.trim();
@@ -114,17 +115,21 @@ export async function POST(req: NextRequest) {
     console.log("[checkout] ORS register result:");
     console.dir(result, { depth: null });
 
-    const successId =
-      result.RequestID ||
-      result.Operator?.RegistrationBookingCode ||
-      result.Operator?.BookingCode ||
-      result.Operator?.RemoteBookingCode ||
-      "success";
+    const successId = getCheckoutReference(result);
+    const successUrl = new URL(`/checkout/success/${encodeURIComponent(successId)}`, req.url);
+
+    if (result.RequestID) {
+      successUrl.searchParams.set("requestId", String(result.RequestID));
+    }
+
+    if (result.Operator?.BookingCode) {
+      successUrl.searchParams.set("bookingCode", String(result.Operator.BookingCode));
+    }
 
     console.log("[checkout] redirecting to success:", successId);
 
     return NextResponse.redirect(
-      new URL(`/checkout/success/${encodeURIComponent(successId)}`, req.url),
+      successUrl,
       303
     );
   } catch (err: any) {
