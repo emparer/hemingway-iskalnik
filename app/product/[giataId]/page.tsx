@@ -36,11 +36,19 @@ export default async function ProductPage({
   const { giataId } = await params;
   const sp = await searchParams;
 
+  const pickParam = (val: any): string => {
+    if (!val) return "";
+    if (Array.isArray(val)) return val[0] || "";
+    return String(val);
+  };
+  const depAirport = pickParam(sp.DepartureAirports) || pickParam(sp["DepartureAirports[]"]);
+
   const productData = await searchProducts({
     ...sp,
     GiataID: giataId,
     type: sp.type || "pauschal",
     AdultCount: Number(sp.AdultCount || 2),
+    DepartureAirports: depAirport || undefined,
   });
 
   const dateData = await searchDates({
@@ -49,6 +57,7 @@ export default async function ProductPage({
     type: sp.type || "pauschal",
     AdultCount: Number(sp.AdultCount || 2),
     Count: 500, // Load all available offers up to 500
+    DepartureAirports: depAirport || undefined,
   });
 
   const infoData = await getProductInfo({
@@ -137,7 +146,7 @@ const formatDate = (dateStr: string) => {
         defaultStartDate={sp.StartDate || ""}
         defaultEndDate={sp.EndDate || ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
-        defaultDepartureAirports={typeof sp.DepartureAirports === "string" ? sp.DepartureAirports : ""}
+        defaultDepartureAirports={depAirport}
         type={sp.type || "pauschal"}
       />
 

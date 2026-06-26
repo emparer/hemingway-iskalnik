@@ -12,6 +12,13 @@ export default async function Home({
 }) {
   const sp = await searchParams;
 
+  const pickParam = (val: any): string => {
+    if (!val) return "";
+    if (Array.isArray(val)) return val[0] || "";
+    return String(val);
+  };
+  const depAirport = pickParam(sp.DepartureAirports) || pickParam(sp["DepartureAirports[]"]);
+
   const data = await searchProducts({
     type:        sp.type        || "pauschal",
     query:       sp.query       || "Turčija",
@@ -29,7 +36,7 @@ export default async function Home({
     SortDir:     sp.SortDir     || "asc",
     ProductName: sp.ProductName,
     // New specific fields
-    DepartureAirports: sp.DepartureAirports || sp["DepartureAirports[]"],
+    DepartureAirports: depAirport || undefined,
     MinCategory:       sp.MinCategory,
     ServiceCodes:      sp.ServiceCodes || sp["ServiceCodes[]"],
     "Filter[Category][]":    sp["Filter[Category][]"],
@@ -87,7 +94,7 @@ export default async function Home({
         defaultStartDate={sp.StartDate ? String(sp.StartDate) : ""}
         defaultEndDate={sp.EndDate ? String(sp.EndDate) : ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
-        defaultDepartureAirports={typeof sp.DepartureAirports === "string" ? sp.DepartureAirports : ""}
+        defaultDepartureAirports={depAirport}
         type={Array.isArray(type) ? type[0] : type}
       />
 

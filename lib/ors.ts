@@ -161,6 +161,8 @@ export async function orsPost(path: string, payload: Record<string, any>) {
     throw new Error("ORS_API_KEY missing. Using mock data.");
   }
 
+  console.log("[ors] POST", path, JSON.stringify(payload));
+
   const res = await fetch(`${ORS_API_BASE}${path}`, {
     method: "POST",
     headers: {
