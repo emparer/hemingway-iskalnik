@@ -45,6 +45,7 @@ export default async function CheckoutPage({
 }) {
   const { tourOperator, hashCode } = await params;
   const sp = await searchParams;
+  const checkoutError = typeof sp.error === "string" ? sp.error : "";
 
   const adultCount = Number(sp.AdultCount || 2);
   const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount);
@@ -212,6 +213,7 @@ export default async function CheckoutPage({
   return (
     <main className="container page-shell">
       {verify.usingMock && <p className="mock-notice">Način z vzorčnimi podatki: {verify.error || verify.info || "Neznana napaka"}</p>}
+      {checkoutError && <p className="mock-notice">Rezervacije ni bilo mogoče oddati: {checkoutError}</p>}
 
       <section className="checkout-hero">
         <div className="checkout-hero-copy">

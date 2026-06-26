@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registerOffer } from "@/lib/ors";
 import { getCheckoutReference } from "@/lib/checkout-reference";
+import { assertSuccessfulRegistration } from "@/lib/register-result";
 
 function slDateToIso(date: string) {
   const cleaned = date.trim();
@@ -110,7 +111,9 @@ export async function POST(req: NextRequest) {
   console.dir(payload, { depth: null });
 
   try {
-    const result = await registerOffer(tourOperator, hashCode, payload);
+    const result = assertSuccessfulRegistration(
+      await registerOffer(tourOperator, hashCode, payload)
+    );
 
     console.log("[checkout] ORS register result:");
     console.dir(result, { depth: null });
@@ -135,6 +138,14 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[checkout] ORS register failed:");
     console.error(err);
+
+    const referer = req.headers.get("referer");
+    if (referer) {
+      const retryUrl = new URL(referer);
+      retryUrl.searchParams.set("error", err.message || String(err));
+
+      return NextResponse.redirect(retryUrl, 303);
+    }
 
     return NextResponse.json(
       {
