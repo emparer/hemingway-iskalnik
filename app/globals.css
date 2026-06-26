@@ -312,7 +312,9 @@ textarea {
   background: linear-gradient(160deg, rgba(139, 53, 63, 0.88) 0%, rgba(115, 42, 50, 0.9) 100%);
 }
 .embed-page-shell {
-  padding: 16px 0 24px;
+  padding: 0;
+  width: 100% !important;
+  max-width: none !important;
 }
 .embed-page-shell .search-panel {
   margin-bottom: 0;
@@ -458,7 +460,8 @@ textarea {
   width: 100%;
 }
 body.embed-route {
-  background: #f9f6f2 none no-repeat center center;
+  background: transparent !important;
+  min-height: auto !important;
 }
 body.embed-route .search-mobile-toggle {
   display: none !important;
