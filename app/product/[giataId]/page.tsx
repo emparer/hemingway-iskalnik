@@ -60,9 +60,21 @@ export default async function ProductPage({
     DepartureAirports: depAirport || undefined,
   });
 
+  const results = productData.Results || [];
+  const matchingItem = results.find((r: any) => {
+    const p = r.Product || r;
+    return String(p.GiataID || r.GiataID || "") === String(giataId);
+  }) || results[0];
+
+  const resolvedTourOperator = sp.TourOperator 
+    || matchingItem?.TourOperator 
+    || matchingItem?.Product?.TourOperator
+    || Object.keys(matchingItem?.TourOperators || {})[0]
+    || "PALM";
+
   const infoData = await getProductInfo({
     GiataID: giataId,
-    TourOperator: sp.TourOperator || "PALM",
+    TourOperator: resolvedTourOperator,
     StartDate: sp.StartDate,
   });
 
@@ -235,7 +247,7 @@ const formatDate = (dateStr: string) => {
         <h2>Termini in cene</h2>
         <DatesList
           dates={dates}
-          sp={sp}
+          sp={{ ...sp, TourOperator: resolvedTourOperator }}
           adultCount={Number(sp.AdultCount || 2)}
         />
       </section>
