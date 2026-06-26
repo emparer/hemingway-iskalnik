@@ -3,6 +3,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import { buildFallbackSearchTarget, type ResolvedSearchTarget } from "@/lib/search-target";
+import { getMinimumServiceCodes } from "@/lib/service-codes";
 
 interface Props {
   defaultQuery?: string;
@@ -190,7 +192,7 @@ export default function SearchBox({
       return;
     }
 
-    const currentDefaultRegionGroup = "";
+    const currentDefaultRegionGroup = defaultRegionGroup;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
@@ -246,9 +248,9 @@ export default function SearchBox({
     };
   }, [activeType, isQueryFocused, query, selectedSuggestion]);
 
-  async function resolveSearchTarget() {
+  async function resolveSearchTarget(): Promise<ResolvedSearchTarget> {
     const trimmedQuery = query.trim();
-    const currentDefaultRegionGroup = "";
+    const currentDefaultRegionGroup = defaultRegionGroup;
 
     if (!trimmedQuery) {
       return {
@@ -329,18 +331,7 @@ export default function SearchBox({
       // Fall back to the manually entered query if quicksearch fails.
     }
 
-    return {
-      query: trimmedQuery,
-      RegionGroup: currentDefaultRegionGroup,
-    };
-  }
-
-  function getServiceCodes(min: string) {
-    if (min === "OV") return ["OV", "BB", "HB", "FB", "AI"];
-    if (min === "BB") return ["BB", "HB", "FB", "AI"];
-    if (min === "HB") return ["HB", "FB", "AI"];
-    if (min === "AI") return ["AI"];
-    return [];
+    return buildFallbackSearchTarget(trimmedQuery, currentDefaultRegionGroup);
   }
 
   function buildSearchParams(target: Awaited<ReturnType<typeof resolveSearchTarget>>) {
@@ -389,7 +380,7 @@ export default function SearchBox({
     if (minCategory) params.set("MinCategory", minCategory);
     if (subType) params.set("SubType", subType);
 
-    const codes = getServiceCodes(minService);
+    const codes = getMinimumServiceCodes(minService);
     codes.forEach(c => params.append("ServiceCodes[]", c));
 
     return params;

@@ -2,12 +2,13 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { ORS_API_BASE, ORS_API_KEY, orsPost } from "./ors";
+import { shouldFallbackToAnyQuickSearch } from "./quicksearch-results";
 
 const execFileAsync = promisify(execFile);
 
 export async function quickSearch(query: string, type = "any") {
-  try {
-    const data = await orsPost(`/search/${type}/quicksearch`, { Query: query });
+  async function fetchQuickSearch(searchType: string) {
+    const data = await orsPost(`/search/${searchType}/quicksearch`, { Query: query });
 
     if (data?.Results) {
       return data;
@@ -17,7 +18,7 @@ export async function quickSearch(query: string, type = "any") {
       "-s",
       "-X",
       "POST",
-      `${ORS_API_BASE}/search/${type}/quicksearch`,
+      `${ORS_API_BASE}/search/${searchType}/quicksearch`,
       "-H",
       `X-Api-Key: ${ORS_API_KEY}`,
       "-H",
@@ -27,6 +28,15 @@ export async function quickSearch(query: string, type = "any") {
     ]);
 
     return JSON.parse(stdout);
+  }
+
+  try {
+    const data = await fetchQuickSearch(type);
+    if (shouldFallbackToAnyQuickSearch(type, data)) {
+      return await fetchQuickSearch("any");
+    }
+
+    return data;
   } catch (e: any) {
     return { Results: {}, usingMock: true, error: e.message || String(e) };
   }
