@@ -65,10 +65,10 @@ function normalizeSearchValue(value?: string) {
 }
 
 export default function SearchBox({
-  defaultQuery = "Turčija",
+  defaultQuery = "",
   defaultRegionGroup = "724",
-  defaultStartDate = "19.05.2026",
-  defaultEndDate = "18.05.2027",
+  defaultStartDate = "",
+  defaultEndDate = "",
   defaultAdultCount = 2,
   type = "pauschal",
   compact = false,
@@ -133,6 +133,13 @@ export default function SearchBox({
       return;
     }
 
+    if (selectedSuggestion && trimmedQuery === selectedSuggestion.label.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsSuggesting(false);
+      return;
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       try {
@@ -185,7 +192,7 @@ export default function SearchBox({
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [activeType, defaultRegionGroup, isQueryFocused, query]);
+  }, [activeType, defaultRegionGroup, isQueryFocused, query, selectedSuggestion]);
 
   async function resolveSearchTarget() {
     const trimmedQuery = query.trim();

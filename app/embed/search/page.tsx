@@ -23,10 +23,10 @@ export default async function EmbedSearchPage({
         compact
         submitMode="external"
         externalBaseUrl={canonicalBaseUrl}
-        defaultQuery={pickParam(sp.query, "Turčija")}
+        defaultQuery={pickParam(sp.query, "")}
         defaultRegionGroup={pickParam(sp.RegionGroup, "724")}
-        defaultStartDate={pickParam(sp.StartDate, "19.05.2026")}
-        defaultEndDate={pickParam(sp.EndDate, "18.05.2027")}
+        defaultStartDate={pickParam(sp.StartDate, "")}
+        defaultEndDate={pickParam(sp.EndDate, "")}
         defaultAdultCount={Number(pickParam(sp.AdultCount, "2"))}
         type={pickParam(sp.type, "pauschal")}
       />

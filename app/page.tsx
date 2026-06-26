@@ -82,10 +82,10 @@ export default async function Home({
   return (
     <main className="container page-shell">
       <SearchBox
-        defaultQuery={String(sp.query || "Turčija")}
-        defaultRegionGroup={String(sp.RegionGroup || "724")}
-        defaultStartDate={String(sp.StartDate || "19.05.2026")}
-        defaultEndDate={String(sp.EndDate || "18.05.2027")}
+        defaultQuery={sp.query ? String(sp.query) : ""}
+        defaultRegionGroup={sp.RegionGroup ? String(sp.RegionGroup) : "724"}
+        defaultStartDate={sp.StartDate ? String(sp.StartDate) : ""}
+        defaultEndDate={sp.EndDate ? String(sp.EndDate) : ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
         type={Array.isArray(type) ? type[0] : type}
       />
