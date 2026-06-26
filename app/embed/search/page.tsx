@@ -39,7 +39,7 @@ export default async function EmbedSearchPage({
         submitMode="external"
         externalBaseUrl={canonicalBaseUrl}
         defaultQuery={pickParam(sp.query, "")}
-        defaultRegionGroup={pickParam(sp.RegionGroup, "724")}
+        defaultRegionGroup={pickParam(sp.RegionGroup, "")}
         defaultStartDate={pickParam(sp.StartDate, "")}
         defaultEndDate={pickParam(sp.EndDate, "")}
         defaultAdultCount={Number(pickParam(sp.AdultCount, "2"))}

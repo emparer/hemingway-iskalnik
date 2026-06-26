@@ -152,7 +152,7 @@ const formatDate = (dateStr: string) => {
     <main className="container page-shell">
       <SearchBox
         defaultQuery={sp.query || ""}
-        defaultRegionGroup={String(sp.RegionGroup || prod.Location?.RegionGroupID || 724)}
+        defaultRegionGroup={String(sp.RegionGroup || prod.Location?.RegionGroupID || "")}
         defaultStartDate={sp.StartDate || ""}
         defaultEndDate={sp.EndDate || ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}

@@ -91,7 +91,7 @@ export default async function CheckoutPage({
   const location = verifyLoc
     || [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") 
     || (typeof sp.LocationName === "string" ? sp.LocationName : "") 
-    || "Turčija";
+    || "";
 
   const getFlightLines = (result: any) => {
     const info = result?.Info || [];

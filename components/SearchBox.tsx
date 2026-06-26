@@ -95,7 +95,7 @@ function IsoToSlovenianDate(dateStr: string): string {
 
 export default function SearchBox({
   defaultQuery = "",
-  defaultRegionGroup = "724",
+  defaultRegionGroup = "",
   defaultStartDate = "",
   defaultEndDate = "",
   defaultAdultCount = 2,
@@ -190,7 +190,7 @@ export default function SearchBox({
       return;
     }
 
-    const currentDefaultRegionGroup = activeType === "pauschal" ? "724" : "";
+    const currentDefaultRegionGroup = "";
 
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
@@ -248,7 +248,7 @@ export default function SearchBox({
 
   async function resolveSearchTarget() {
     const trimmedQuery = query.trim();
-    const currentDefaultRegionGroup = activeType === "pauschal" ? "724" : "";
+    const currentDefaultRegionGroup = "";
 
     if (!trimmedQuery) {
       return {
@@ -437,14 +437,6 @@ export default function SearchBox({
             className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
             onClick={() => {
               setActiveType(opt.value);
-              if (opt.value !== "pauschal" && query === "Turčija") {
-                setQuery("");
-                setSelectedSuggestion(null);
-              }
-              if (opt.value === "pauschal" && !query) {
-                setQuery("Turčija");
-                setSelectedSuggestion(null);
-              }
             }}
           >
             {opt.label}

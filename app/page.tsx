@@ -19,9 +19,8 @@ export default async function Home({
   };
   const depAirport = pickParam(sp.DepartureAirports) || pickParam(sp["DepartureAirports[]"]);
 
-  const isNonPauschal = sp.type === "hotel" || sp.type === "trips";
-  const defaultQuery = isNonPauschal ? "" : "Turčija";
-  const defaultRegionGroup = isNonPauschal ? "" : "724";
+  const defaultQuery = "";
+  const defaultRegionGroup = "";
 
   function inferMinService(serviceCodes: any): string {
     if (!serviceCodes) return "";
