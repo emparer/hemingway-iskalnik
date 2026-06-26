@@ -1119,7 +1119,7 @@ body.embed-route .search-form.mobile-collapsed {
 }
 .date-row-header {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) auto;
   gap: 12px;
   align-items: center;
 }
@@ -1146,7 +1146,7 @@ body.embed-route .search-form.mobile-collapsed {
 }
 .date-row-summary {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) auto;
   gap: 12px;
   align-items: center;
 }

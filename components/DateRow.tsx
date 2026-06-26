@@ -195,6 +195,10 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
           <span>{serviceName}</span>
         </div>
         <div className="date-meta">
+          <span className="date-label">Prevoz</span>
+          <span>{d.DepartureAirportName || d.DepartureAirport || "Lasten prevoz"}</span>
+        </div>
+        <div className="date-meta">
           <span className="date-label">Cena na osebo</span>
           <span className="date-price">{formatCurrency(perPersonPrice)}</span>
         </div>
