@@ -458,9 +458,7 @@ textarea {
   width: 100%;
 }
 body.embed-route {
-  background:
-    radial-gradient(circle at top left, rgba(139, 53, 63, 0.06), transparent 24%),
-    linear-gradient(180deg, #fbf7f3 0%, var(--bg) 35%, #f7f0e8 100%);
+  background: #f9f6f2 none no-repeat center center;
 }
 .date-row-action {
   padding: 7px 12px;
