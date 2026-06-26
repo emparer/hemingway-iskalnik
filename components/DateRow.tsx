@@ -157,6 +157,17 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
   const checkoutHref = (() => {
     const searchParams = new URLSearchParams(qs);
     selectedExtraLabels.forEach(value => searchParams.append("extraServices", value));
+    searchParams.set("ProductName", offerName);
+    searchParams.set("StartDate", d.StartDate || "");
+    searchParams.set("EndDate", d.EndDate || "");
+    searchParams.set("Duration", String(d.Duration || ""));
+    searchParams.set("RoomName", roomName);
+    searchParams.set("ServiceName", serviceName);
+    searchParams.set("Price", String(perPersonPrice));
+    searchParams.set("LocationName", location || d.FlightRoute || "");
+    if (d.FlightRoute) {
+      searchParams.set("FlightRoute", d.FlightRoute);
+    }
     return `/checkout/${tourOpEnc}/${hashEnc}?${searchParams.toString()}`;
   })();
 

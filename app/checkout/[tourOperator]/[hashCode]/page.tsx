@@ -48,14 +48,17 @@ export default async function CheckoutPage({
 
   const adultCount = Number(sp.AdultCount || 2);
   const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount);
+  
+  // If verify is using mock data (meaning API fails or is in mock mode), we prioritize the real selected price from sp.Price
+  const rawPrice = !verify.usingMock 
+    ? (verify.Price?.TotalPrice ?? verify.Price?.PricePerPerson ?? verify.Price ?? verify.TotalPrice ?? verify.OfferPrice ?? verify.Total)
+    : null;
+
   const offerPrice =
-    parsePriceValue(verify.Price?.TotalPrice) ??
-    parsePriceValue(verify.Price?.PricePerPerson) ??
-    parsePriceValue(verify.Price) ??
-    parsePriceValue(verify.TotalPrice) ??
-    parsePriceValue(verify.OfferPrice) ??
-    parsePriceValue(verify.Total) ??
+    parsePriceValue(rawPrice) ??
+    (sp.Price ? parsePriceValue(sp.Price) : undefined) ??
     1118;
+
   const registrationFee = 20;
   const total = offerPrice + registrationFee;
   const extraServices = Array.isArray(verify.ExtraServices) ? verify.ExtraServices : [];
@@ -69,14 +72,16 @@ export default async function CheckoutPage({
   const startDate = service.StartDate || verify.StartDate || (typeof sp.StartDate === "string" ? sp.StartDate : "") || "";
   const endDate = service.EndDate || verify.EndDate || (typeof sp.EndDate === "string" ? sp.EndDate : "") || "";
   const duration = service.Duration || verify.Duration || (typeof sp.Duration === "string" ? sp.Duration : "") || "";
-  const roomName = service.RoomName || "brez namestitve";
-  const serviceName = service.ServiceName || "samo prevoz";
-  const offerName = service.OfferName || "Letalski prevoz";
-  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || "Turčija";
+  const roomName = service.RoomName || (typeof sp.RoomName === "string" ? sp.RoomName : "") || "brez namestitve";
+  const serviceName = service.ServiceName || (typeof sp.ServiceName === "string" ? sp.ServiceName : "") || "samo prevoz";
+  const offerName = service.OfferName || (typeof sp.ProductName === "string" ? sp.ProductName : "") || "Letalski prevoz";
+  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || (typeof sp.LocationName === "string" ? sp.LocationName : "") || "Turčija";
 
   const flightLines = (verify?.Info || [])
     .map((line: string) => String(line).trim())
     .filter((line: string) => line.startsWith("=>") || line.startsWith("<="));
+
+  const flightRouteFallback = typeof sp.FlightRoute === "string" ? sp.FlightRoute : "";
 
   return (
     <main className="container page-shell">
@@ -230,6 +235,8 @@ export default async function CheckoutPage({
               <b>
                 {flightLines.length > 0 ? (
                   flightLines.join(" / ")
+                ) : flightRouteFallback ? (
+                  flightRouteFallback
                 ) : (
                   "Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije."
                 )}
