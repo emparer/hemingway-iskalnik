@@ -394,7 +394,7 @@ export default function SearchBox({
   const typeOptions = [
     { value: "pauschal", label: "Počitnice z letalom" },
     { value: "hotel", label: "Samo nastanitev" },
-    { value: "trips", label: "Avtobusna potovanja" },
+    { value: "trips", label: "Potovanja" },
   ];
 
   return (
