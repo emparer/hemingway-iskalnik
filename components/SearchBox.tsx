@@ -363,6 +363,13 @@ export default function SearchBox({
       "SubType",
       "Page",
       "ServiceCodes[]",
+      "TourOperator",
+      "Filter[Category][]",
+      "Filter[ServiceType][]",
+      "Filter[RoomType][]",
+      "Filter[Region][]",
+      "Filter[Location][]",
+      "RFilter[Price]",
     ].forEach(key => params.delete(key));
 
     params.set("type", activeType);
