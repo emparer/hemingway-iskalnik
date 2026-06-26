@@ -91,9 +91,9 @@ function buildSearchPayload(params: SearchParams) {
   if (params.ProductName) payload.ProductName = params.ProductName;
   if (params.SubType) payload.SubType = params.SubType;
   
-  const airports = params.DepartureAirports || params["DepartureAirports[]"];
+  const airports = params.DepartureAirport || params.DepartureAirports || params["DepartureAirports[]"] || params["DepartureAirport[]"];
   if (airports) {
-    payload.DepartureAirports = toArray(airports);
+    payload.DepartureAirport = toArray(airports);
   }
 
   // Duration handling (split "7-9" into MinDuration/MaxDuration)
