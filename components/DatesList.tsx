@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DateRow from "./DateRow";
 
 interface DatesListProps {
@@ -27,8 +27,17 @@ function parseSloDate(dateStr: string): Date {
 export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const PAGE_SIZE = 10;
+
+  // Reset page when dates change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [dates]);
 
   const handleSortToggle = (field: SortField) => {
+    setCurrentPage(0);
     if (sortField === field) {
       if (sortOrder === "asc") {
         setSortOrder("desc");
@@ -75,6 +84,18 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
     return 0;
   });
 
+  const totalPages = Math.ceil(sortedDates.length / PAGE_SIZE);
+  const activePage = Math.min(currentPage, Math.max(0, totalPages - 1));
+  const startIndex = activePage * PAGE_SIZE;
+  const paginatedDates = sortedDates.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const handlePageChange = (pageIndex: number) => {
+    setCurrentPage(pageIndex);
+    setTimeout(() => {
+      document.getElementById("dates")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return "↕";
     return sortOrder === "asc" ? "↑" : "↓";
@@ -115,28 +136,104 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
           Ni razpoložljivih terminov za izbrane filtre.
         </div>
       ) : (
-        <div className="dates-grid">
-          {sortedDates.map((d: any, i: number) => {
-            const hashEnc = encodeURIComponent(d.HashCode || `mock:${i}:1`);
-            const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "PALM");
-            const qs = new URLSearchParams({
-              AdultCount: String(sp.AdultCount || 2),
-              ...(sp.query ? { query: sp.query } : {}),
-              ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
-            }).toString();
+        <>
+          <div className="dates-grid">
+            {paginatedDates.map((d: any, i: number) => {
+              const indexInSorted = startIndex + i;
+              const hashEnc = encodeURIComponent(d.HashCode || `mock:${indexInSorted}:1`);
+              const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "PALM");
+              const qs = new URLSearchParams({
+                AdultCount: String(sp.AdultCount || 2),
+                ...(sp.query ? { query: sp.query } : {}),
+                ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
+              }).toString();
 
-            return (
-              <DateRow
-                key={i}
-                d={d}
-                tourOpEnc={tourOpEnc}
-                hashEnc={hashEnc}
-                qs={qs}
-                adultCount={adultCount}
-              />
-            );
-          })}
-        </div>
+              return (
+                <DateRow
+                  key={indexInSorted}
+                  d={d}
+                  tourOpEnc={tourOpEnc}
+                  hashEnc={hashEnc}
+                  qs={qs}
+                  adultCount={adultCount}
+                />
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination" style={{ marginTop: "32px", marginBottom: "16px" }}>
+              {activePage > 0 && (
+                <button
+                  type="button"
+                  className="page-btn"
+                  onClick={() => handlePageChange(activePage - 1)}
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* Show first page if not in window */}
+              {activePage > 2 && (
+                <>
+                  <button
+                    type="button"
+                    className="page-btn"
+                    onClick={() => handlePageChange(0)}
+                  >
+                    1
+                  </button>
+                  {activePage > 3 && (
+                    <span className="page-dots" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", color: "var(--muted)" }}>
+                      ...
+                    </span>
+                  )}
+                </>
+              )}
+
+              {Array.from({ length: totalPages }, (_, i) => i)
+                .filter((i) => i >= activePage - 2 && i <= activePage + 2)
+                .map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`page-btn${i === activePage ? " active" : ""}`}
+                    onClick={() => handlePageChange(i)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+              {/* Show last page if not in window */}
+              {activePage < totalPages - 3 && (
+                <>
+                  {activePage < totalPages - 4 && (
+                    <span className="page-dots" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", color: "var(--muted)" }}>
+                      ...
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="page-btn"
+                    onClick={() => handlePageChange(totalPages - 1)}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+
+              {activePage < totalPages - 1 && (
+                <button
+                  type="button"
+                  className="page-btn"
+                  onClick={() => handlePageChange(activePage + 1)}
+                >
+                  ›
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
