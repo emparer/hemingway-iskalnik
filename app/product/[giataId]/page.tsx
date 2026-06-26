@@ -37,20 +37,24 @@ export default async function ProductPage({
   const sp = await searchParams;
 
   const productData = await searchProducts({
+    ...sp,
     GiataID: giataId,
     type: sp.type || "pauschal",
-    AdultCount: sp.AdultCount || 2,
+    AdultCount: Number(sp.AdultCount || 2),
   });
 
   const dateData = await searchDates({
+    ...sp,
     GiataID: giataId,
     type: sp.type || "pauschal",
-    AdultCount: sp.AdultCount || 2,
+    AdultCount: Number(sp.AdultCount || 2),
+    Count: 500, // Load all available offers up to 500
   });
 
   const infoData = await getProductInfo({
     GiataID: giataId,
     TourOperator: sp.TourOperator || "PALM",
+    StartDate: sp.StartDate,
   });
 
   const prod = getFirstProduct(productData, giataId);
@@ -128,10 +132,10 @@ const formatDate = (dateStr: string) => {
   return (
     <main className="container page-shell">
       <SearchBox
-        defaultQuery={sp.query || prod.Location?.RegionGroupName || "Turčija"}
+        defaultQuery={sp.query || ""}
         defaultRegionGroup={String(sp.RegionGroup || prod.Location?.RegionGroupID || 724)}
-        defaultStartDate={sp.StartDate || "19.05.2026"}
-        defaultEndDate={sp.EndDate || "18.05.2027"}
+        defaultStartDate={sp.StartDate || ""}
+        defaultEndDate={sp.EndDate || ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
         type={sp.type || "pauschal"}
       />
