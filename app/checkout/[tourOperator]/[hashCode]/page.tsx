@@ -85,7 +85,7 @@ export default async function CheckoutPage({
 
   return (
     <main className="container page-shell">
-      {verify.usingMock && <p className="mock-notice">Način z vzorčnimi podatki: {verify.info}</p>}
+      {verify.usingMock && <p className="mock-notice">Način z vzorčnimi podatki: {verify.error || verify.info || "Neznana napaka"}</p>}
 
       <section className="checkout-hero">
         <div className="checkout-hero-copy">
