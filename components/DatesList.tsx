@@ -66,14 +66,14 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
       valA = Number(a.Duration || 0);
       valB = Number(b.Duration || 0);
     } else if (sortField === "serviceType") {
-      valA = String(a.ServiceName || a.ServiceCode || "").toLowerCase();
-      valB = String(b.ServiceName || b.ServiceCode || "").toLowerCase();
+      valA = String(a.ServiceName || a.ServiceType || a.ServiceCode || "").toLowerCase();
+      valB = String(b.ServiceName || b.ServiceType || b.ServiceCode || "").toLowerCase();
     } else if (sortField === "roomStandard") {
-      valA = String(a.RoomStandard || a.RoomStandardCode || "").toLowerCase();
-      valB = String(b.RoomStandard || b.RoomStandardCode || "").toLowerCase();
+      valA = String(a.RoomSubtypeName || a.RoomStandard || a.RoomStandardCode || "").toLowerCase();
+      valB = String(b.RoomSubtypeName || b.RoomStandard || b.RoomStandardCode || "").toLowerCase();
     } else if (sortField === "roomType") {
-      valA = String(a.RoomName || "").toLowerCase();
-      valB = String(b.RoomName || "").toLowerCase();
+      valA = String(a.RoomName || a.RoomType || "").toLowerCase();
+      valB = String(b.RoomName || b.RoomType || "").toLowerCase();
     } else if (sortField === "price") {
       valA = Number(a.Price || 0);
       valB = Number(b.Price || 0);
@@ -148,9 +148,11 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
                 ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
               }).toString();
 
+              const rowKey = d.HashCode || `${d.StartDate}-${d.Duration}-${d.RoomName}-${d.Price}-${indexInSorted}`;
+
               return (
                 <DateRow
-                  key={indexInSorted}
+                  key={rowKey}
                   d={d}
                   tourOpEnc={tourOpEnc}
                   hashEnc={hashEnc}
