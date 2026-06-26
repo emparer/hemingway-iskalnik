@@ -10,6 +10,7 @@ interface Props {
   defaultStartDate?: string;
   defaultEndDate?: string;
   defaultAdultCount?: number;
+  defaultDepartureAirports?: string;
   type?: string;
   compact?: boolean;
   submitMode?: "internal" | "external";
@@ -94,6 +95,7 @@ export default function SearchBox({
   defaultStartDate = "",
   defaultEndDate = "",
   defaultAdultCount = 2,
+  defaultDepartureAirports = "",
   type = "pauschal",
   compact = false,
   submitMode = "internal",
@@ -109,7 +111,7 @@ export default function SearchBox({
   const [activeType, setActiveType] = useState(type);
   
   // New fields for specific types
-  const [airport, setAirport] = useState("");
+  const [airport, setAirport] = useState(defaultDepartureAirports);
   const [minService, setMinService] = useState("");
   const [minCategory, setMinCategory] = useState("");
   const [subType, setSubType] = useState("");
@@ -127,8 +129,9 @@ export default function SearchBox({
     setStartDate(defaultStartDate);
     setEndDate(defaultEndDate);
     setAdultCount(defaultAdultCount);
+    setAirport(defaultDepartureAirports);
     setActiveType(type);
-  }, [defaultAdultCount, defaultEndDate, defaultQuery, defaultStartDate, type]);
+  }, [defaultAdultCount, defaultEndDate, defaultQuery, defaultStartDate, defaultDepartureAirports, type]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

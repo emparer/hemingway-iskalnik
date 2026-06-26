@@ -87,6 +87,7 @@ export default async function Home({
         defaultStartDate={sp.StartDate ? String(sp.StartDate) : ""}
         defaultEndDate={sp.EndDate ? String(sp.EndDate) : ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
+        defaultDepartureAirports={typeof sp.DepartureAirports === "string" ? sp.DepartureAirports : ""}
         type={Array.isArray(type) ? type[0] : type}
       />
 

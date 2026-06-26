@@ -137,6 +137,7 @@ const formatDate = (dateStr: string) => {
         defaultStartDate={sp.StartDate || ""}
         defaultEndDate={sp.EndDate || ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
+        defaultDepartureAirports={typeof sp.DepartureAirports === "string" ? sp.DepartureAirports : ""}
         type={sp.type || "pauschal"}
       />
 

@@ -33,6 +33,7 @@ export default async function EmbedSearchPage({
         defaultStartDate={pickParam(sp.StartDate, "")}
         defaultEndDate={pickParam(sp.EndDate, "")}
         defaultAdultCount={Number(pickParam(sp.AdultCount, "2"))}
+        defaultDepartureAirports={pickParam(sp.DepartureAirports, "")}
         type={pickParam(sp.type, "pauschal")}
       />
     </main>
