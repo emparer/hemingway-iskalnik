@@ -74,8 +74,19 @@ export default async function CheckoutPage({
   const duration = service.Duration || verify.Duration || (typeof sp.Duration === "string" ? sp.Duration : "") || "";
   const roomName = service.RoomName || (typeof sp.RoomName === "string" ? sp.RoomName : "") || "brez namestitve";
   const serviceName = service.ServiceName || (typeof sp.ServiceName === "string" ? sp.ServiceName : "") || "samo prevoz";
-  const offerName = service.OfferName || (typeof sp.ProductName === "string" ? sp.ProductName : "") || "Letalski prevoz";
-  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || (typeof sp.LocationName === "string" ? sp.LocationName : "") || "Turčija";
+  const verifyProd = verify.OfferInfo?.Products?.[0]?.Product || {};
+  const verifyLoc = [verifyProd.Location?.LocationName, verifyProd.Location?.RegionGroupName || verifyProd.Location?.RegionName].filter(Boolean).join(" / ");
+
+  const offerName = service.OfferName 
+    || verifyProd.OfferName 
+    || verifyProd.Name 
+    || (typeof sp.ProductName === "string" ? sp.ProductName : "") 
+    || "Letalski prevoz";
+
+  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") 
+    || verifyLoc
+    || (typeof sp.LocationName === "string" ? sp.LocationName : "") 
+    || "Turčija";
 
   const getFlightLines = (result: any) => {
     const fromInfo = (result?.Info || [])

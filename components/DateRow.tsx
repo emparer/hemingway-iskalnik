@@ -185,8 +185,11 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
   const extras = verified?.ExtraServices || [];
   const roomName = service.RoomName || d.RoomName || "brez namestitve";
   const serviceName = service.ServiceName || d.ServiceName || "samo prevoz";
-  const offerName = service.OfferName || d.ProductName || "Ponudba";
-  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ");
+  const verifyProd = verified?.OfferInfo?.Products?.[0]?.Product || {};
+  const verifyLoc = [verifyProd.Location?.LocationName, verifyProd.Location?.RegionGroupName || verifyProd.Location?.RegionName].filter(Boolean).join(" / ");
+
+  const offerName = service.OfferName || verifyProd.OfferName || verifyProd.Name || d.ProductName || "Ponudba";
+  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || verifyLoc;
 
   const checkoutHref = (() => {
     const searchParams = new URLSearchParams(qs);
