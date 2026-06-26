@@ -15,6 +15,16 @@ export default async function EmbedSearchPage({
   const canonicalBaseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "";
 
+  function inferMinService(serviceCodes: any): string {
+    if (!serviceCodes) return "";
+    const arr = Array.isArray(serviceCodes) ? serviceCodes : [serviceCodes];
+    if (arr.includes("OV")) return "OV";
+    if (arr.includes("BB")) return "BB";
+    if (arr.includes("HB")) return "HB";
+    if (arr.includes("AI")) return "AI";
+    return "";
+  }
+
   return (
     <main className="container embed-page-shell">
       <style>{`
@@ -35,6 +45,10 @@ export default async function EmbedSearchPage({
         defaultAdultCount={Number(pickParam(sp.AdultCount, "2"))}
         defaultDepartureAirports={pickParam(sp.DepartureAirports || sp["DepartureAirports[]"], "")}
         type={pickParam(sp.type, "pauschal")}
+        defaultDuration={pickParam(sp.Duration, "")}
+        defaultMinService={inferMinService(sp.ServiceCodes || sp["ServiceCodes[]"])}
+        defaultMinCategory={pickParam(sp.MinCategory, "")}
+        defaultSubType={pickParam(sp.SubType, "")}
       />
     </main>
   );

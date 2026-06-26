@@ -91,9 +91,12 @@ function buildSearchPayload(params: SearchParams) {
   if (params.ProductName) payload.ProductName = params.ProductName;
   if (params.SubType) payload.SubType = params.SubType;
   
-  const airports = params.DepartureAirport || params.DepartureAirports || params["DepartureAirports[]"] || params["DepartureAirport[]"];
-  if (airports) {
-    payload.DepartureAirport = toArray(airports);
+  const searchType = params.type || "pauschal";
+  if (searchType === "pauschal") {
+    const airports = params.DepartureAirport || params.DepartureAirports || params["DepartureAirports[]"] || params["DepartureAirport[]"];
+    if (airports) {
+      payload.DepartureAirport = toArray(airports);
+    }
   }
 
   // Duration handling (split "7-9" into MinDuration/MaxDuration)
@@ -142,6 +145,23 @@ function buildSearchPayload(params: SearchParams) {
   
   if (Object.keys(filters).length > 0) {
     payload.Filter = filters;
+  }
+
+  // Handle RFilter[Price] (Slovene filters sidebar price slider)
+  if (params["RFilter[Price]"]) {
+    const parts = String(params["RFilter[Price]"]).split(",");
+    if (parts.length === 2) {
+      const min = toNumberIfPossible(parts[0].trim());
+      const max = toNumberIfPossible(parts[1].trim());
+      if (min !== undefined || max !== undefined) {
+        payload.RFilter = {
+          Price: {
+            Minimum: min,
+            Maximum: max,
+          },
+        };
+      }
+    }
   }
 
   // Sorting

@@ -19,10 +19,24 @@ export default async function Home({
   };
   const depAirport = pickParam(sp.DepartureAirports) || pickParam(sp["DepartureAirports[]"]);
 
+  const isNonPauschal = sp.type === "hotel" || sp.type === "trips";
+  const defaultQuery = isNonPauschal ? "" : "Turčija";
+  const defaultRegionGroup = isNonPauschal ? "" : "724";
+
+  function inferMinService(serviceCodes: any): string {
+    if (!serviceCodes) return "";
+    const arr = Array.isArray(serviceCodes) ? serviceCodes : [serviceCodes];
+    if (arr.includes("OV")) return "OV";
+    if (arr.includes("BB")) return "BB";
+    if (arr.includes("HB")) return "HB";
+    if (arr.includes("AI")) return "AI";
+    return "";
+  }
+
   const data = await searchProducts({
     type:        sp.type        || "pauschal",
-    query:       sp.query       || "Turčija",
-    RegionGroup: sp.RegionGroup || "724",
+    query:       sp.query !== undefined ? sp.query : defaultQuery,
+    RegionGroup: sp.RegionGroup !== undefined ? sp.RegionGroup : defaultRegionGroup,
     Region:      sp.Region,
     Location:    sp.Location,
     GiataID:     sp.GiataID,
@@ -39,6 +53,7 @@ export default async function Home({
     DepartureAirports: depAirport || undefined,
     MinCategory:       sp.MinCategory,
     ServiceCodes:      sp.ServiceCodes || sp["ServiceCodes[]"],
+    SubType:           sp.SubType,
     "Filter[Category][]":    sp["Filter[Category][]"],
     "Filter[ServiceType][]": sp["Filter[ServiceType][]"],
     "Filter[RoomType][]":    sp["Filter[RoomType][]"],
@@ -89,13 +104,17 @@ export default async function Home({
   return (
     <main className="container page-shell">
       <SearchBox
-        defaultQuery={sp.query ? String(sp.query) : ""}
-        defaultRegionGroup={sp.RegionGroup ? String(sp.RegionGroup) : "724"}
+        defaultQuery={sp.query !== undefined ? String(sp.query) : defaultQuery}
+        defaultRegionGroup={sp.RegionGroup !== undefined ? String(sp.RegionGroup) : defaultRegionGroup}
         defaultStartDate={sp.StartDate ? String(sp.StartDate) : ""}
         defaultEndDate={sp.EndDate ? String(sp.EndDate) : ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
         defaultDepartureAirports={depAirport}
         type={Array.isArray(type) ? type[0] : type}
+        defaultDuration={sp.Duration ? String(sp.Duration) : ""}
+        defaultMinService={inferMinService(sp.ServiceCodes || sp["ServiceCodes[]"])}
+        defaultMinCategory={sp.MinCategory ? String(sp.MinCategory) : ""}
+        defaultSubType={sp.SubType ? String(sp.SubType) : ""}
       />
 
       {data.usingMock && (

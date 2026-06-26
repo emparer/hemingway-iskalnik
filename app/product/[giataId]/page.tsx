@@ -138,6 +138,16 @@ const formatDate = (dateStr: string) => {
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
 
+  function inferMinService(serviceCodes: any): string {
+    if (!serviceCodes) return "";
+    const arr = Array.isArray(serviceCodes) ? serviceCodes : [serviceCodes];
+    if (arr.includes("OV")) return "OV";
+    if (arr.includes("BB")) return "BB";
+    if (arr.includes("HB")) return "HB";
+    if (arr.includes("AI")) return "AI";
+    return "";
+  }
+
   return (
     <main className="container page-shell">
       <SearchBox
@@ -148,6 +158,10 @@ const formatDate = (dateStr: string) => {
         defaultAdultCount={Number(sp.AdultCount || 2)}
         defaultDepartureAirports={depAirport}
         type={sp.type || "pauschal"}
+        defaultDuration={sp.Duration ? String(sp.Duration) : ""}
+        defaultMinService={inferMinService(sp.ServiceCodes || sp["ServiceCodes[]"])}
+        defaultMinCategory={sp.MinCategory ? String(sp.MinCategory) : ""}
+        defaultSubType={sp.SubType ? String(sp.SubType) : ""}
       />
 
       {(productData.usingMock || dateData.usingMock) && (

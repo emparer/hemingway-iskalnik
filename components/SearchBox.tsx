@@ -15,6 +15,10 @@ interface Props {
   compact?: boolean;
   submitMode?: "internal" | "external";
   externalBaseUrl?: string;
+  defaultDuration?: string;
+  defaultMinService?: string;
+  defaultMinCategory?: string;
+  defaultSubType?: string;
 }
 
 interface QuickSearchLocation {
@@ -100,6 +104,10 @@ export default function SearchBox({
   compact = false,
   submitMode = "internal",
   externalBaseUrl = "",
+  defaultDuration = "",
+  defaultMinService = "",
+  defaultMinCategory = "",
+  defaultSubType = "",
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -107,14 +115,14 @@ export default function SearchBox({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [adultCount, setAdultCount] = useState(defaultAdultCount);
-  const [duration, setDuration] = useState("");
+  const [duration, setDuration] = useState(defaultDuration);
   const [activeType, setActiveType] = useState(type);
   
   // New fields for specific types
   const [airport, setAirport] = useState(defaultDepartureAirports);
-  const [minService, setMinService] = useState("");
-  const [minCategory, setMinCategory] = useState("");
-  const [subType, setSubType] = useState("");
+  const [minService, setMinService] = useState(defaultMinService);
+  const [minCategory, setMinCategory] = useState(defaultMinCategory);
+  const [subType, setSubType] = useState(defaultSubType);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<SearchSuggestion | null>(null);
@@ -131,7 +139,22 @@ export default function SearchBox({
     setAdultCount(defaultAdultCount);
     setAirport(defaultDepartureAirports);
     setActiveType(type);
-  }, [defaultAdultCount, defaultEndDate, defaultQuery, defaultStartDate, defaultDepartureAirports, type]);
+    setDuration(defaultDuration);
+    setMinService(defaultMinService);
+    setMinCategory(defaultMinCategory);
+    setSubType(defaultSubType);
+  }, [
+    defaultAdultCount,
+    defaultEndDate,
+    defaultQuery,
+    defaultStartDate,
+    defaultDepartureAirports,
+    type,
+    defaultDuration,
+    defaultMinService,
+    defaultMinCategory,
+    defaultSubType
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -167,6 +190,8 @@ export default function SearchBox({
       return;
     }
 
+    const currentDefaultRegionGroup = activeType === "pauschal" ? "724" : "";
+
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       try {
@@ -185,7 +210,7 @@ export default function SearchBox({
             kind: "location" as const,
             label: item.LocationName || "Lokacija",
             sublabel: [item.RegionName, item.RegionGroupName].filter(Boolean).join(", "),
-            RegionGroup: String(item.RegionGroupID || defaultRegionGroup),
+            RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
             Region: item.RegionID ? String(item.RegionID) : undefined,
             Location: String(item.LocationID),
           })),
@@ -193,7 +218,7 @@ export default function SearchBox({
             kind: "region" as const,
             label: item.RegionName || "Regija",
             sublabel: item.RegionGroupName || "",
-            RegionGroup: String(item.RegionGroupID || defaultRegionGroup),
+            RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
             Region: String(item.RegionID),
           })),
         ];
@@ -219,15 +244,16 @@ export default function SearchBox({
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [activeType, defaultRegionGroup, isQueryFocused, query, selectedSuggestion]);
+  }, [activeType, isQueryFocused, query, selectedSuggestion]);
 
   async function resolveSearchTarget() {
     const trimmedQuery = query.trim();
+    const currentDefaultRegionGroup = activeType === "pauschal" ? "724" : "";
 
     if (!trimmedQuery) {
       return {
         query: trimmedQuery,
-        RegionGroup: defaultRegionGroup,
+        RegionGroup: currentDefaultRegionGroup,
       };
     }
 
@@ -261,7 +287,7 @@ export default function SearchBox({
       if (exactLocation?.LocationID) {
         return {
           query: trimmedQuery,
-          RegionGroup: String(exactLocation.RegionGroupID || defaultRegionGroup),
+          RegionGroup: String(exactLocation.RegionGroupID || currentDefaultRegionGroup),
           Region: exactLocation.RegionID ? String(exactLocation.RegionID) : undefined,
           Location: String(exactLocation.LocationID),
         };
@@ -271,7 +297,7 @@ export default function SearchBox({
       if (exactRegion?.RegionID) {
         return {
           query: trimmedQuery,
-          RegionGroup: String(exactRegion.RegionGroupID || defaultRegionGroup),
+          RegionGroup: String(exactRegion.RegionGroupID || currentDefaultRegionGroup),
           Region: String(exactRegion.RegionID),
         };
       }
@@ -305,7 +331,7 @@ export default function SearchBox({
 
     return {
       query: trimmedQuery,
-      RegionGroup: defaultRegionGroup,
+      RegionGroup: currentDefaultRegionGroup,
     };
   }
 
@@ -409,7 +435,17 @@ export default function SearchBox({
             key={opt.value}
             type="button"
             className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
-            onClick={() => setActiveType(opt.value)}
+            onClick={() => {
+              setActiveType(opt.value);
+              if (opt.value !== "pauschal" && query === "Turčija") {
+                setQuery("");
+                setSelectedSuggestion(null);
+              }
+              if (opt.value === "pauschal" && !query) {
+                setQuery("Turčija");
+                setSelectedSuggestion(null);
+              }
+            }}
           >
             {opt.label}
           </button>

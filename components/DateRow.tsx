@@ -263,7 +263,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
   const verifyLoc = [verifyProd.Location?.LocationName, verifyProd.Location?.RegionGroupName || verifyProd.Location?.RegionName].filter(Boolean).join(" / ");
 
   const offerName = service.OfferName || verifyProd.OfferName || verifyProd.Name || d.ProductName || "Ponudba";
-  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || verifyLoc;
+  const location = verifyLoc || [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ");
 
   const checkoutHref = (() => {
     const searchParams = new URLSearchParams(qs);
@@ -307,7 +307,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
         </div>
         <div className="date-meta">
           <span className="date-label">Prevoz</span>
-          <span>{d.DepartureAirportName || d.DepartureAirport || "Lasten prevoz"}</span>
+          <span>{d.DepartureAirportName || d.DepartureAirport || d.EntryPointName || "Lasten prevoz"}</span>
         </div>
         <div className="date-meta">
           <span className="date-label">Cena na osebo</span>
@@ -356,6 +356,9 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
               <span>Storitev: {serviceName}</span>
               {service.DepartureAirportName && service.ArrivalAirportName && (
                 <span>Relacija: {service.DepartureAirportName} - {service.ArrivalAirportName}</span>
+              )}
+              {verified?.OfferInfo?.Dates?.[0]?.EntryPointName && (
+                <span>Vstopno mesto: {verified.OfferInfo.Dates[0].EntryPointName}</span>
               )}
             </div>
 

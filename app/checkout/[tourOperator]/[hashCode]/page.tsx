@@ -49,15 +49,20 @@ export default async function CheckoutPage({
   const adultCount = Number(sp.AdultCount || 2);
   const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount);
   
-  // If verify is using mock data (meaning API fails or is in mock mode), we prioritize the real selected price from sp.Price
-  const rawPrice = !verify.usingMock 
-    ? (verify.Price?.TotalPrice ?? verify.Price?.PricePerPerson ?? verify.Price ?? verify.TotalPrice ?? verify.OfferPrice ?? verify.Total)
-    : null;
+  // Get verified total price if available, otherwise calculate from per-person price
+  const verifiedTotal = 
+    verify.Price?.TotalPrice ?? 
+    verify.TotalPrice ?? 
+    verify.Total ?? 
+    (verify.Price?.PricePerPerson ? Number(verify.Price.PricePerPerson) * adultCount : undefined) ??
+    (typeof verify.Price === "number" ? verify.Price : undefined);
 
-  const offerPrice =
-    parsePriceValue(rawPrice) ??
-    (sp.Price ? parsePriceValue(sp.Price) : undefined) ??
-    1118;
+  const fallbackPerPerson = sp.Price ? parsePriceValue(sp.Price) : 1118;
+  const fallbackTotal = fallbackPerPerson ? fallbackPerPerson * adultCount : 1118 * adultCount;
+
+  const offerPrice = !verify.usingMock && verifiedTotal !== undefined
+    ? Number(verifiedTotal)
+    : fallbackTotal;
 
   const registrationFee = 20;
   const total = offerPrice + registrationFee;
@@ -83,8 +88,8 @@ export default async function CheckoutPage({
     || (typeof sp.ProductName === "string" ? sp.ProductName : "") 
     || "Letalski prevoz";
 
-  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") 
-    || verifyLoc
+  const location = verifyLoc
+    || [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") 
     || (typeof sp.LocationName === "string" ? sp.LocationName : "") 
     || "Turčija";
 
@@ -257,13 +262,13 @@ export default async function CheckoutPage({
             </div>
 
             <div className="field-grid checkout-field-grid">
-              <div className="form-field"><label>Ime *</label><input name="name" /></div>
-              <div className="form-field"><label>Priimek *</label><input name="surname" /></div>
+              <div className="form-field"><label>Ime *</label><input name="name" required /></div>
+              <div className="form-field"><label>Priimek *</label><input name="surname" required /></div>
               <div className="form-field form-field-wide"><label>Naslov *</label><input name="address" required /></div>
               <div className="form-field"><label>Pošta *</label><input name="zip" required /></div>
               <div className="form-field"><label>Kraj *</label><input name="city" required /></div>
-              <div className="form-field"><label>E-naslov *</label><input name="email" type="email" /></div>
-              <div className="form-field"><label>Telefon *</label><input name="phone" /></div>
+              <div className="form-field"><label>E-naslov *</label><input name="email" type="email" required /></div>
+              <div className="form-field"><label>Telefon *</label><input name="phone" required /></div>
             </div>
           </div>
 
@@ -284,10 +289,10 @@ export default async function CheckoutPage({
                   <span className="traveler-hint">obvezni podatki</span>
                 </div>
                 <div className="field-grid checkout-field-grid">
-                  <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} /></div>
-                  <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} /></div>
-                  <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} /></div>
-                  <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`}><option>M</option><option>Ž</option></select></div>
+                  <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} required /></div>
+                  <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} required /></div>
+                  <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} required /></div>
+                  <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`} required><option>M</option><option>Ž</option></select></div>
                 </div>
               </div>
             ))}
@@ -351,18 +356,34 @@ export default async function CheckoutPage({
             {duration && <div className="summary-line"><span>Trajanje</span><b>{duration} dni</b></div>}
             <div className="summary-line"><span>Soba</span><b>{roomName}</b></div>
             <div className="summary-line"><span>Storitev</span><b>{serviceName}</b></div>
-            <div className="summary-line">
-              <span>Letalski prevoz</span>
-              <b>
-                {flightLines.length > 0 ? (
-                  flightLines.join(" / ")
-                ) : flightRouteFallback ? (
-                  flightRouteFallback
-                ) : (
-                  "Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije."
-                )}
-              </b>
-            </div>
+            {sp.type === "pauschal" && (
+              <div className="summary-line">
+                <span>Letalski prevoz</span>
+                <b>
+                  {flightLines.length > 0 ? (
+                    flightLines.join(" / ")
+                  ) : flightRouteFallback ? (
+                    flightRouteFallback
+                  ) : (
+                    "Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije."
+                  )}
+                </b>
+              </div>
+            )}
+            {sp.type === "trips" && (
+              <div className="summary-line">
+                <span>Prevoz / Vstopno mesto</span>
+                <b>
+                  {verify?.OfferInfo?.Dates?.[0]?.EntryPointName || sp.LocationName || "Lasten prevoz"}
+                </b>
+              </div>
+            )}
+            {sp.type === "hotel" && (
+              <div className="summary-line">
+                <span>Prevoz</span>
+                <b>Lasten prevoz</b>
+              </div>
+            )}
           </div>
 
           <div className="offer-price-panel">
