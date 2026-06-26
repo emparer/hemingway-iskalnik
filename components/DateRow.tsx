@@ -11,6 +11,7 @@ interface Props {
   hashEnc: string;
   qs: string;
   adultCount: number;
+  type?: string;
 }
 
 function isReservationPossible(result: any) {
@@ -210,7 +211,7 @@ function readStatusTone(result: any) {
   };
 }
 
-export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props) {
+export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }: Props) {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -379,16 +380,18 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
               )}
             </div>
 
-            <div className="verified-card">
-              <span className="verified-card-label">Let</span>
-              {flightLines.length > 0 ? (
-                flightLines.map((line: string) => (
-                  <div key={line} className="verified-flight-line">{line}</div>
-                ))
-              ) : (
-                <span>Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije.</span>
-              )}
-            </div>
+            {((type === "pauschal" || !type) || (flightLines.length > 0)) && (
+              <div className="verified-card">
+                <span className="verified-card-label">Let</span>
+                {flightLines.length > 0 ? (
+                  flightLines.map((line: string) => (
+                    <div key={line} className="verified-flight-line">{line}</div>
+                  ))
+                ) : (
+                  <span>Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije.</span>
+                )}
+              </div>
+            )}
 
             <div className="verified-card">
               <span className="verified-card-label">Dodatne storitve</span>

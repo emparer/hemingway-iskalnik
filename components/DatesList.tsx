@@ -158,6 +158,7 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
                   hashEnc={hashEnc}
                   qs={qs}
                   adultCount={adultCount}
+                  type={sp.type}
                 />
               );
             })}
