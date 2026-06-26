@@ -3,24 +3,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { normalizeFilterList } from "@/lib/filter-list";
 
 interface Props {
   data: any;
 }
 
 function filterList(filters: any, key: string) {
-  const raw = filters?.[key];
-
-  if (Array.isArray(raw)) return raw;
-
-  if (raw && typeof raw === "object") {
-    return Object.entries(raw).map(([id, v]: [string, any]) => ({
-      ID: id,
-      Name: v?.Value || v?.Name || v?.Label || String(v),
-    }));
-  }
-
-  return [];
+  return normalizeFilterList(filters?.[key]);
 }
 
 export default function Filters({ data }: Props) {
