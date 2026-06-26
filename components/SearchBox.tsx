@@ -97,7 +97,7 @@ export default function SearchBox({
   type = "pauschal",
   compact = false,
   submitMode = "internal",
-  externalBaseUrl = "https://hemingway-iskalnik.vercel.app",
+  externalBaseUrl = "",
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -361,7 +361,8 @@ export default function SearchBox({
 
   function buildSearchUrl(target: Awaited<ReturnType<typeof resolveSearchTarget>>) {
     const params = buildSearchParams(target);
-    const base = externalBaseUrl.replace(/\/$/, "");
+    const fallbackBase = typeof window !== "undefined" ? window.location.origin : "";
+    const base = (externalBaseUrl || fallbackBase).replace(/\/$/, "");
     return `${base}/?${params.toString()}`;
   }
 

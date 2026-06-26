@@ -13,8 +13,7 @@ export default async function EmbedSearchPage({
 }) {
   const sp = await searchParams;
   const canonicalBaseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://hemingway-iskalnik.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL || "";
 
   return (
     <main className="container embed-page-shell">
