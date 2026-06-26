@@ -74,9 +74,43 @@ function formatTravelersLabel(count: number) {
 }
 
 function readFlightLines(result: any) {
-  return (result?.Info || [])
+  const fromInfo = (result?.Info || [])
     .map((line: string) => String(line).trim())
     .filter((line: string) => line.startsWith("=>") || line.startsWith("<="));
+
+  if (fromInfo.length > 0) {
+    return fromInfo;
+  }
+
+  const lines: string[] = [];
+  const services = result?.Services || {};
+
+  for (const key of Object.keys(services)) {
+    const s = services[key];
+    if (s && s.Type === "F") {
+      const code = s.Code || "";
+      const [depAirport, arrAirport] = code.split(/\s+/);
+
+      const formatDateStr = (str: string) => {
+        if (!str || str.length !== 8) return str;
+        const d = str.slice(0, 2);
+        const m = str.slice(2, 4);
+        const y = str.slice(4, 8);
+        return `${d}.${m}.${y}`;
+      };
+
+      if (depAirport && arrAirport) {
+        const start = formatDateStr(s.StartDate);
+        const end = formatDateStr(s.EndDate);
+        lines.push(`=> Let: ${depAirport} - ${arrAirport}${start ? ` (${start})` : ""}`);
+        lines.push(`<= Let: ${arrAirport} - ${depAirport}${end ? ` (${end})` : ""}`);
+      } else if (code) {
+        lines.push(`=> Let: ${code}`);
+      }
+    }
+  }
+
+  return lines;
 }
 
 function readStatusTone(result: any) {
