@@ -1,7 +1,7 @@
 //app/product/[giataId]/page.tsx
 import SearchBox from "@/components/SearchBox";
 import GalleryClient from "@/components/GalleryClient";
-import DateRow from "@/components/DateRow";
+import DatesList from "@/components/DatesList";
 import { searchDates, searchProducts, getProductInfo } from "@/lib/ors";
 import Link from "next/link";
 
@@ -209,35 +209,11 @@ const formatDate = (dateStr: string) => {
 
       <section className="tabs" id="dates">
         <h2>Termini in cene</h2>
-
-        {dates.length === 0 && (
-          <div style={{ padding: "24px 4px", color: "var(--muted)", fontSize: 14 }}>
-            Ni razpoložljivih terminov.
-          </div>
-        )}
-
-        <div className="dates-grid">
-          {dates.map((d: any, i: number) => {
-            const hashEnc   = encodeURIComponent(d.HashCode || `mock:${i}:1`);
-            const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "PALM");
-            const qs = new URLSearchParams({
-              AdultCount: String(sp.AdultCount || 2),
-              ...(sp.query       ? { query:       sp.query }       : {}),
-              ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
-            }).toString();
-
-            return (
-              <DateRow 
-                key={i} 
-                d={d} 
-                tourOpEnc={tourOpEnc} 
-                hashEnc={hashEnc} 
-                qs={qs} 
-                adultCount={Number(sp.AdultCount || 2)} 
-              />
-            );
-          })}
-        </div>
+        <DatesList
+          dates={dates}
+          sp={sp}
+          adultCount={Number(sp.AdultCount || 2)}
+        />
       </section>
 
       <section className="tabs product-description">

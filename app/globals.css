@@ -2202,3 +2202,54 @@ body.embed-route .search-form.mobile-collapsed {
     padding: 12px 14px;
   }
 }
+
+/* Client-side sorting toolbar in product details */
+.sort-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  padding: 12px 18px;
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.sort-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sort-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid rgba(139, 53, 63, 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sort-btn:hover {
+  background: rgba(139, 53, 63, 0.05);
+  border-color: rgba(139, 53, 63, 0.2);
+}
+.sort-btn.active {
+  background: var(--c);
+  color: #fff;
+  border-color: var(--c);
+  box-shadow: 0 4px 12px rgba(139, 53, 63, 0.16);
+}
