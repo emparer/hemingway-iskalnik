@@ -460,6 +460,12 @@ textarea {
 body.embed-route {
   background: #f9f6f2 none no-repeat center center;
 }
+body.embed-route .search-mobile-toggle {
+  display: none !important;
+}
+body.embed-route .search-form.mobile-collapsed {
+  display: block !important;
+}
 .date-row-action {
   padding: 7px 12px;
   font-size: 12px;
