@@ -1,4 +1,5 @@
 import SearchBox from "@/components/SearchBox";
+import IframeResizer from "@/components/IframeResizer";
 
 function pickParam(value: string | string[] | undefined, fallback: string) {
   if (Array.isArray(value)) return value[0] || fallback;
@@ -17,6 +18,7 @@ export default async function EmbedSearchPage({
 
   return (
     <main className="container embed-page-shell">
+      <IframeResizer />
       <SearchBox
         compact
         submitMode="external"
