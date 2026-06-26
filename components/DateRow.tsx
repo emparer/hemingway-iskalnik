@@ -222,8 +222,12 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }:
     setError(null);
 
     try {
+      if (!d.TourOperator) {
+        throw new Error("Manjka organizator za preverjanje ponudbe.");
+      }
+
       const params = new URLSearchParams({
-        TourOperator: d.TourOperator || "PALM",
+        TourOperator: d.TourOperator,
         HashCode: d.HashCode || "",
         AdultCount: String(adultCount),
         Ages: Array(adultCount).fill(30).join(","),

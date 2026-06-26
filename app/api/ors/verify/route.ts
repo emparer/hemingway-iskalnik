@@ -4,13 +4,22 @@ import { verifyOffer } from "@/lib/ors";
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
+  const tourOperator = sp.get("TourOperator") || "";
+
+  if (!tourOperator) {
+    return NextResponse.json(
+      { error: "TourOperator is required." },
+      { status: 400 }
+    );
+  }
+
   const ages = (sp.get("Ages") || "")
     .split(",")
     .map((value) => Number(value.trim()))
     .filter((value) => !Number.isNaN(value));
 
   const data = await verifyOffer(
-    sp.get("TourOperator") || "PALM",
+    tourOperator,
     sp.get("HashCode") || "",
     Number(sp.get("AdultCount") || 2),
     ages

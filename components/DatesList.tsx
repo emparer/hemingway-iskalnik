@@ -141,7 +141,7 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
             {paginatedDates.map((d: any, i: number) => {
               const indexInSorted = startIndex + i;
               const hashEnc = encodeURIComponent(d.HashCode || `mock:${indexInSorted}:1`);
-              const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "PALM");
+              const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "");
               const qs = new URLSearchParams({
                 AdultCount: String(sp.AdultCount || 2),
                 ...(sp.query ? { query: sp.query } : {}),

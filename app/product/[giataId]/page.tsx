@@ -3,6 +3,7 @@ import SearchBox from "@/components/SearchBox";
 import GalleryClient from "@/components/GalleryClient";
 import DatesList from "@/components/DatesList";
 import { searchDates, searchProducts, getProductInfo } from "@/lib/ors";
+import { resolveTourOperator } from "@/lib/tour-operator";
 import Link from "next/link";
 
 function getFirstProduct(productData: any, giataId: string) {
@@ -66,17 +67,18 @@ export default async function ProductPage({
     return String(p.GiataID || r.GiataID || "") === String(giataId);
   }) || results[0];
 
-  const resolvedTourOperator = sp.TourOperator 
-    || matchingItem?.TourOperator 
-    || matchingItem?.Product?.TourOperator
-    || Object.keys(matchingItem?.TourOperators || {})[0]
-    || "PALM";
-
-  const infoData = await getProductInfo({
-    GiataID: giataId,
-    TourOperator: resolvedTourOperator,
-    StartDate: sp.StartDate,
+  const resolvedTourOperator = resolveTourOperator({
+    searchParams: sp,
+    matchingItem,
   });
+
+  const infoData = resolvedTourOperator
+    ? await getProductInfo({
+        GiataID: giataId,
+        TourOperator: resolvedTourOperator,
+        StartDate: sp.StartDate,
+      })
+    : {};
 
   const prod = getFirstProduct(productData, giataId);
   const dates = dateData.Dates || [];
