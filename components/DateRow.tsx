@@ -66,6 +66,13 @@ function formatPassengerLabel(index: number) {
   return `Potnik ${index}`;
 }
 
+function formatTravelersLabel(count: number) {
+  if (count === 1) return "1 potnik";
+  if (count === 2) return "2 potnika";
+  if (count === 3 || count === 4) return `${count} potniki`;
+  return `${count} potnikov`;
+}
+
 function readFlightLines(result: any) {
   return (result?.Info || [])
     .map((line: string) => String(line).trim())
@@ -237,7 +244,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
                 ))
               ) : (
                 <div className="verified-list-row">
-                  <span>{adultCount} potnika</span>
+                  <span>{formatTravelersLabel(adultCount)}</span>
                   <strong>{formatCurrency(totalPrice)}</strong>
                 </div>
               )}

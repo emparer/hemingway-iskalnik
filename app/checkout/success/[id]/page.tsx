@@ -11,18 +11,18 @@ export default async function CheckoutSuccessPage({
   return (
     <main className="container">
       <section className="tabs" style={{ marginTop: 30 }}>
-        <h2>Povpraševanje je bilo poslano</h2>
+        <h2>Povpraševanje je bilo uspešno prejeto</h2>
 
         <p style={{ fontSize: 16, lineHeight: 1.7 }}>
-          Vaše povpraševanje je bilo uspešno poslano v ORS.
+          Vaše povpraševanje za rezervacijo je bilo uspešno prejeto.
         </p>
 
         <p className="muted" style={{ marginTop: 12 }}>
-          Referenca: <strong>{decodeURIComponent(id)}</strong>
+          Referenca povpraševanja: <strong>{decodeURIComponent(id)}</strong>
         </p>
 
         <p className="muted" style={{ marginTop: 12 }}>
-          Agencija mora povpraševanje še pregledati oziroma potrditi.
+          Naši svetovalci bodo preverili razpoložljivost in vas kontaktirali v najkrajšem možnem času za potrditev rezervacije.
         </p>
 
         <Link href="/" className="btn" style={{ marginTop: 20 }}>
