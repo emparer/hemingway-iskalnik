@@ -74,7 +74,9 @@ function formatTravelersLabel(count: number) {
 }
 
 function readFlightLines(result: any) {
-  const fromInfo = (result?.Info || [])
+  const info = result?.Info || [];
+
+  const fromInfo = info
     .map((line: string) => String(line).trim())
     .filter((line: string) => line.startsWith("=>") || line.startsWith("<="));
 
@@ -83,8 +85,80 @@ function readFlightLines(result: any) {
   }
 
   const lines: string[] = [];
-  const services = result?.Services || {};
+  const formatARegex = /([A-Z]{3})\s*-\s*([A-Z]{3})\s+([A-Z0-9]{2,3}\s*\d+)\s+[A-Z]\s+(\d{2}\.\d{2}\.\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/;
+  const formatBRegex = /([HR]):([A-Z]{3})-([A-Z]{3})\s+(\d{2}:\d{2})-(\d{2}:\d{2})\s*\/([A-Z0-9]{2,3}\d+)\/(\d{6})/;
+  const routeOutRegex = /H\s*I\s*N\s+([A-Z]{3})\s*-\s*([A-Z]{3})/i;
+  const routeInRegex = /R\s*U\s*E\s*C\s*K\s+([A-Z]{3})\s*-\s*([A-Z]{3})/i;
+  const formatCLineRegex = /^\s*([CE])\s+(\d{2}\.\d{2})\s+[A-Z]{2}\s+([A-Z0-9]{4,})\s+\d+\s+[A-Z]\s+(\d{2})(\d{2})\s+(\d{2})(\d{2})/;
 
+  let outboundRoute = "";
+  let inboundRoute = "";
+
+  for (const rawLine of info) {
+    const line = String(rawLine).trim();
+    const matchOut = line.match(routeOutRegex);
+    if (matchOut) {
+      outboundRoute = `${matchOut[1]} - ${matchOut[2]}`;
+    }
+    const matchIn = line.match(routeInRegex);
+    if (matchIn) {
+      inboundRoute = `${matchIn[1]} - ${matchIn[2]}`;
+    }
+  }
+
+  // Format A check
+  for (const rawLine of info) {
+    const line = String(rawLine).trim();
+    const matchA = line.match(formatARegex);
+    if (matchA) {
+      const [, dep, arr, flightNo, dateStr, depTime, arrTime] = matchA;
+      const parts = dateStr.split(".");
+      const formattedDate = parts.length === 3 ? `${parts[0]}.${parts[1]}.20${parts[2]}` : dateStr;
+      const isReturn = lines.length > 0;
+      const prefix = isReturn ? "<=" : "=>";
+      lines.push(`${prefix} Let: ${dep} - ${arr}, ${formattedDate} ob ${depTime} - ${arrTime} (${flightNo.replace(/\s+/g, "")})`);
+    }
+  }
+
+  // Format B check
+  if (lines.length === 0) {
+    for (const rawLine of info) {
+      const line = String(rawLine).trim();
+      const matches = [...line.matchAll(new RegExp(formatBRegex, "g"))];
+      if (matches.length > 0) {
+        for (const match of matches) {
+          const [, direction, dep, arr, depTime, arrTime, flightNo, dateStr] = match;
+          let formattedDate = dateStr;
+          if (dateStr.length === 6) {
+            formattedDate = `${dateStr.slice(0, 2)}.${dateStr.slice(2, 4)}.20${dateStr.slice(4, 6)}`;
+          }
+          const prefix = direction === "H" ? "=>" : "<=";
+          lines.push(`${prefix} Let: ${dep} - ${arr}, ${formattedDate} ob ${depTime} - ${arrTime} (${flightNo})`);
+        }
+        if (lines.length > 0) break;
+      }
+    }
+  }
+
+  // Format C check
+  if (lines.length === 0) {
+    for (const rawLine of info) {
+      const line = String(rawLine);
+      const matchC = line.match(formatCLineRegex);
+      if (matchC) {
+        const [, type, dateStr, flightNo, depH, depM, arrH, arrM] = matchC;
+        const prefix = type === "C" ? "=>" : "<=";
+        const route = type === "C" ? outboundRoute : inboundRoute;
+        lines.push(`${prefix} Let: ${route || flightNo}, ${dateStr}. ob ${depH}:${depM} - ${arrH}:${arrM} (${flightNo})`);
+      }
+    }
+  }
+
+  if (lines.length > 0) {
+    return lines;
+  }
+
+  const services = result?.Services || {};
   for (const key of Object.keys(services)) {
     const s = services[key];
     if (s && s.Type === "F") {
