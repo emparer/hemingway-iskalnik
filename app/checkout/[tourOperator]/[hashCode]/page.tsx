@@ -27,6 +27,15 @@ function formatCurrency(value: unknown) {
   return safeValue.toLocaleString("sl-SI", { style: "currency", currency: "EUR" });
 }
 
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return `${day}.${month}.${year}`;
+  }
+  return dateStr;
+}
+
 export default async function CheckoutPage({
   params,
   searchParams,
@@ -55,6 +64,19 @@ export default async function CheckoutPage({
     : sp.extraServices
       ? [String(sp.extraServices)]
       : [];
+
+  const service = verify?.ServiceDesc?.[0] || {};
+  const startDate = service.StartDate || verify.StartDate || (typeof sp.StartDate === "string" ? sp.StartDate : "") || "";
+  const endDate = service.EndDate || verify.EndDate || (typeof sp.EndDate === "string" ? sp.EndDate : "") || "";
+  const duration = service.Duration || verify.Duration || (typeof sp.Duration === "string" ? sp.Duration : "") || "";
+  const roomName = service.RoomName || "brez namestitve";
+  const serviceName = service.ServiceName || "samo prevoz";
+  const offerName = service.OfferName || "Letalski prevoz";
+  const location = [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ") || "Turčija";
+
+  const flightLines = (verify?.Info || [])
+    .map((line: string) => String(line).trim())
+    .filter((line: string) => line.startsWith("=>") || line.startsWith("<="));
 
   return (
     <main className="container page-shell">
@@ -193,17 +215,26 @@ export default async function CheckoutPage({
         <aside className="offer-box">
           <div className="offer-box-top">
             <p className="checkout-kicker">Povzetek ponudbe</p>
-            <h2>LETALSKI PREVOZ TURCIJA</h2>
-            <p className="location">Antalya / Turčija / Antalya z okolico</p>
+            <h2>{offerName.toUpperCase()}</h2>
+            <p className="location">{location}</p>
           </div>
 
           <div className="offer-summary-cluster">
-            <div className="summary-line"><span>Odhod na destinacijo</span><b>28.05.2026</b></div>
-            <div className="summary-line"><span>Odhod iz destinacije</span><b>04.06.2026</b></div>
-            <div className="summary-line"><span>Trajanje</span><b>7 dni</b></div>
-            <div className="summary-line"><span>Soba</span><b>brez namestitve</b></div>
-            <div className="summary-line"><span>Storitev</span><b>samo prevoz</b></div>
-            <div className="summary-line"><span>Letalski prevoz</span><b>Ljubljana - Antalya - Ljubljana</b></div>
+            {startDate && <div className="summary-line"><span>Odhod na destinacijo</span><b>{formatDate(startDate)}</b></div>}
+            {endDate && <div className="summary-line"><span>Odhod iz destinacije</span><b>{formatDate(endDate)}</b></div>}
+            {duration && <div className="summary-line"><span>Trajanje</span><b>{duration} dni</b></div>}
+            <div className="summary-line"><span>Soba</span><b>{roomName}</b></div>
+            <div className="summary-line"><span>Storitev</span><b>{serviceName}</b></div>
+            <div className="summary-line">
+              <span>Letalski prevoz</span>
+              <b>
+                {flightLines.length > 0 ? (
+                  flightLines.join(" / ")
+                ) : (
+                  "Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije."
+                )}
+              </b>
+            </div>
           </div>
 
           <div className="offer-price-panel">

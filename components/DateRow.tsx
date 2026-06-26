@@ -250,7 +250,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount }: Props
                   <div key={line} className="verified-flight-line">{line}</div>
                 ))
               ) : (
-                <span>Podrobnosti leta niso bile vrnjene.</span>
+                <span>Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije.</span>
               )}
             </div>
 
