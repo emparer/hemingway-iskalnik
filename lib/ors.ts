@@ -298,10 +298,25 @@ export async function searchDates(params: SearchParams) {
 
 export async function verifyOffer(tourOperator: string, hashCode: string, adultCount: number, childCount: number = 0, ages: number[] = []) {
   try {
+    const travelers: Record<string, any> = {};
+    const totalCount = adultCount + childCount;
+
+    for (let i = 0; i < totalCount; i++) {
+      const isChild = i >= adultCount;
+      const age = ages[i];
+      travelers[String(i + 1)] = {
+        PassengerType: isChild ? "K" : (i === 1 ? "F" : "H"),
+        FirstName: isChild ? "Otrok" : `Odrasli${i + 1}`,
+        LastName: "Potnik",
+        ...(isChild && age !== undefined ? { Age: age } : {}),
+      };
+    }
+
     return await orsPost(`/offer/${tourOperator}/${encodeURIComponent(hashCode)}/verify`, {
       AdultCount: adultCount,
       ChildCount: childCount,
       Ages: ages,
+      Travelers: travelers,
     });
   } catch (e: any) {
     return { ...mockVerify(), usingMock: true, error: e.message || String(e) };
