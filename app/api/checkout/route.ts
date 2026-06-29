@@ -12,14 +12,26 @@ function slDateToIso(date: string) {
     return cleaned;
   }
 
+  // Format: 07081986 (8 digits without separator)
+  if (/^\d{8}$/.test(cleaned)) {
+    const d = cleaned.slice(0, 2);
+    const m = cleaned.slice(2, 4);
+    const y = cleaned.slice(4, 8);
+    return `${y}-${m}-${d}`;
+  }
+
+  // Normalize separators: slashes, dashes, spaces -> dots
+  const normalized = cleaned.replace(/[\/\-\s]+/g, ".");
+
   // Slovenian: 03.04.2000
-  const parts = cleaned.split(".").map(p => p.trim());
+  const parts = normalized.split(".").map(p => p.trim()).filter(Boolean);
 
-  const [d, m, y] = parts;
+  if (parts.length === 3) {
+    const [d, m, y] = parts;
+    return `${y.padStart(4, "0")}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
 
-  if (!d || !m || !y) return cleaned;
-
-  return `${y.padStart(4, "0")}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  return cleaned;
 }
 
 export async function POST(req: NextRequest) {

@@ -36,6 +36,34 @@ function formatDate(dateStr: string) {
   return dateStr;
 }
 
+function getFriendlyErrorMessage(error: string): string {
+  if (!error) return "";
+
+  const errLower = error.toLowerCase();
+
+  if (errLower.includes("datetime") || errLower.includes("failed to parse time string") || errLower.includes("unexpected character")) {
+    return "Vnesen je neveljaven datum rojstva. Prosimo, preverite, da je datum rojstva vseh potnikov zapisan v obliki DD.MM.LLLL (npr. 07.08.1986) ali kot 8-mestna številka brez pik (npr. 07081986).";
+  }
+
+  if (errLower.includes("missing touroperator") || errLower.includes("missing hashcode")) {
+    return "Manjkajoči identifikacijski podatki ponudbe. Prosimo, vrnite se na iskalnik in ponovno izberite ponudbo.";
+  }
+
+  if (errLower.includes("pogoje poslovanja") || errLower.includes("terms")) {
+    return "Pred oddajo rezervacije morate potrditi strinjanje s splošnimi pogoji poslovanja.";
+  }
+
+  if (errLower.includes("no longer available") || errLower.includes("not bookable") || errLower.includes("expired") || errLower.includes("razprodano") || errLower.includes("sold out")) {
+    return "Ta ponudba ni več na voljo pri organizatorju potovanja. Prosimo, vrnite se na iskalnik in izberite drug termin ali hotel.";
+  }
+
+  if (errLower.includes("ors register error") || errLower.includes("api error") || errLower.includes("unknown error")) {
+    return "Prišlo je do napake pri komunikaciji z organizatorjem potovanja. Prosimo, poskusite znova čez nekaj trenutkov ali nas kontaktirajte, če se težava ponavlja.";
+  }
+
+  return error;
+}
+
 export default async function CheckoutPage({
   params,
   searchParams,
@@ -45,7 +73,8 @@ export default async function CheckoutPage({
 }) {
   const { tourOperator, hashCode } = await params;
   const sp = await searchParams;
-  const checkoutError = typeof sp.error === "string" ? sp.error : "";
+  const rawError = typeof sp.error === "string" ? sp.error : "";
+  const checkoutError = getFriendlyErrorMessage(rawError);
 
   const adultCount = Number(sp.AdultCount || 2);
   const childCount = Number(sp.ChildCount || 0);
@@ -219,7 +248,23 @@ export default async function CheckoutPage({
   return (
     <main className="container page-shell">
       {verify.usingMock && <p className="mock-notice">Način z vzorčnimi podatki: {verify.error || verify.info || "Neznana napaka"}</p>}
-      {checkoutError && <p className="mock-notice">Rezervacije ni bilo mogoče oddati: {checkoutError}</p>}
+      {checkoutError && (
+        <div className="checkout-error-alert" style={{
+          background: "#fdf2f2",
+          border: "1px solid #f8b4b4",
+          color: "#9b1c1c",
+          borderRadius: "16px",
+          padding: "16px 20px",
+          marginBottom: "30px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          boxShadow: "0 4px 12px rgba(155, 28, 28, 0.05)"
+        }}>
+          <strong style={{ fontSize: "16px", fontWeight: "700" }}>Napaka pri oddaji rezervacije</strong>
+          <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.5" }}>{checkoutError}</p>
+        </div>
+      )}
 
       <section className="checkout-hero">
         <div className="checkout-hero-copy">
@@ -304,7 +349,16 @@ export default async function CheckoutPage({
                   <div className="field-grid checkout-field-grid">
                     <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} required /></div>
                     <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} required /></div>
-                    <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} required /></div>
+                    <div className="form-field">
+                      <label>Datum rojstva *</label>
+                      <input
+                        placeholder="DD.MM.LLLL"
+                        name={`passengers[${i}][birthday]`}
+                        required
+                        pattern="^\s*\d{1,2}[\/\-\.\s]\s*\d{1,2}[\/\-\.\s]\s*\d{4}\s*$|^\s*\d{8}\s*$"
+                        title="Vnesite datum v obliki DD.MM.LLLL (npr. 07.08.1986) ali 8 številk (npr. 07081986)"
+                      />
+                    </div>
                     <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`} required><option>M</option><option>Ž</option></select></div>
                   </div>
                 </div>
