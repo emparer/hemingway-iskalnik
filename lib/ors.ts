@@ -83,6 +83,13 @@ function buildSearchPayload(params: SearchParams) {
     Count: toNumberIfPossible(params.PageSize || params.Count || 12),
   };
 
+  if (params.ChildCount !== undefined && params.ChildCount !== "") {
+    payload.ChildCount = toNumberIfPossible(params.ChildCount);
+  }
+  if (params.Ages) {
+    payload.Ages = toArray(params.Ages).map(Number);
+  }
+
   if (params.TourOperator) payload.TourOperator = params.TourOperator;
   if (params.RegionGroup) payload.RegionGroup = toNumberIfPossible(params.RegionGroup);
   if (params.Region) payload.Region = toNumberIfPossible(params.Region);
@@ -263,11 +270,11 @@ export async function searchDates(params: SearchParams) {
 }
 
 
-export async function verifyOffer(tourOperator: string, hashCode: string, adultCount: number, ages: number[] = []) {
+export async function verifyOffer(tourOperator: string, hashCode: string, adultCount: number, childCount: number = 0, ages: number[] = []) {
   try {
     return await orsPost(`/offer/${tourOperator}/${encodeURIComponent(hashCode)}/verify`, {
       AdultCount: adultCount,
-      ChildCount: 0,
+      ChildCount: childCount,
       Ages: ages,
     });
   } catch (e: any) {

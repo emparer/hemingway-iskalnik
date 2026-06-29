@@ -18,10 +18,13 @@ export async function GET(req: NextRequest) {
     .map((value) => Number(value.trim()))
     .filter((value) => !Number.isNaN(value));
 
+  const childCount = Number(sp.get("ChildCount") || 0);
+
   const data = await verifyOffer(
     tourOperator,
     sp.get("HashCode") || "",
     Number(sp.get("AdultCount") || 2),
+    childCount,
     ages
   );
 
