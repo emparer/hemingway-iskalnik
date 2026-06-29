@@ -50,12 +50,11 @@ interface QuickSearchProduct {
 
 type SearchSuggestion =
   | {
-      kind: "location";
+      kind: "region_group";
       label: string;
       sublabel: string;
       RegionGroup: string;
       Region?: string;
-      Location: string;
     }
   | {
       kind: "region";
@@ -63,6 +62,14 @@ type SearchSuggestion =
       sublabel: string;
       RegionGroup: string;
       Region?: string;
+    }
+  | {
+      kind: "location";
+      label: string;
+      sublabel: string;
+      RegionGroup: string;
+      Region?: string;
+      Location?: string;
     };
 
 function normalizeSearchValue(value?: string) {
@@ -250,7 +257,7 @@ export default function SearchBox({
 
         const nextSuggestions: SearchSuggestion[] = [
           ...matchingGroups.map(group => ({
-            kind: "region" as const,
+            kind: "region_group" as const,
             label: group.name,
             sublabel: "Država / regijska skupina",
             RegionGroup: group.id,
@@ -264,8 +271,17 @@ export default function SearchBox({
           })),
         ];
 
-        // Only include locations (microlocations) if we didn't match any country/region groups
-        if (matchingGroups.length === 0) {
+        // If we matched a country/region group, inject the clean country name as the Kraj suggestion,
+        // and do not include the individual tiny microlocations (resort towns).
+        if (matchingGroups.length > 0) {
+          const countryName = matchingGroups[0].name.replace(/\s*\(otoki\)|\s*\(celina\)/gi, "").trim();
+          nextSuggestions.push({
+            kind: "location" as const,
+            label: countryName,
+            sublabel: "Država",
+            RegionGroup: matchingGroups[0].id,
+          });
+        } else {
           nextSuggestions.push(
             ...locations.map(item => ({
               kind: "location" as const,
@@ -575,28 +591,52 @@ export default function SearchBox({
                   {isSuggesting && suggestions.length === 0 && (
                     <div className="search-suggestion-empty">Iščem destinacije in regije ...</div>
                   )}
-                  {suggestions.map(item => (
-                    <button
-                      key={`${item.kind}-${item.label}-${item.sublabel}`}
-                      type="button"
-                      className="search-suggestion"
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => {
-                        setQuery(item.label);
-                        setSelectedSuggestion(item);
-                        setShowSuggestions(false);
-                        ignoreNextQueryEffectRef.current = true;
-                      }}
-                    >
-                      <span className="search-suggestion-main">
-                        {item.label}
-                        <span className="search-suggestion-kind">
-                          {item.kind === "location" ? "Destinacija" : "Regija"}
-                        </span>
-                      </span>
-                      {item.sublabel && <span className="search-suggestion-sub">{item.sublabel}</span>}
-                    </button>
-                  ))}
+                  {(() => {
+                    const destinacije = suggestions.filter(s => s.kind === "region_group");
+                    const regije = suggestions.filter(s => s.kind === "region");
+                    const kraji = suggestions.filter(s => s.kind === "location");
+
+                    const renderItem = (item: SearchSuggestion) => (
+                      <button
+                        key={`${item.kind}-${item.label}-${item.sublabel}`}
+                        type="button"
+                        className="search-suggestion"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setQuery(item.label);
+                          setSelectedSuggestion(item);
+                          setShowSuggestions(false);
+                          ignoreNextQueryEffectRef.current = true;
+                        }}
+                      >
+                        <span className="search-suggestion-main">{item.label}</span>
+                        {item.sublabel && <span className="search-suggestion-sub">{item.sublabel}</span>}
+                      </button>
+                    );
+
+                    return (
+                      <>
+                        {destinacije.length > 0 && (
+                          <div className="search-suggestion-group">
+                            <div className="search-suggestion-group-title">Destinacije</div>
+                            {destinacije.map(renderItem)}
+                          </div>
+                        )}
+                        {regije.length > 0 && (
+                          <div className="search-suggestion-group">
+                            <div className="search-suggestion-group-title">Regije</div>
+                            {regije.map(renderItem)}
+                          </div>
+                        )}
+                        {kraji.length > 0 && (
+                          <div className="search-suggestion-group">
+                            <div className="search-suggestion-group-title">Kraji</div>
+                            {kraji.map(renderItem)}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
