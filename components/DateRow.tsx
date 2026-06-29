@@ -270,7 +270,8 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
       if (isReservationPossible(result)) {
         setVerified(result);
       } else {
-        setError(result.error || "Ponudba ni več na voljo.");
+        const apiMsg = result?.StatusCode?.Text || result?.error || "Ponudba ni več na voljo.";
+        setError(apiMsg);
       }
     } catch (err: any) {
       setError(err?.message || "Preverjanje ni uspelo.");
@@ -375,13 +376,23 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
         </div>
         
         {!verified && (
-          <button 
-            className="btn date-row-action"
-            onClick={handleVerify}
-            disabled={loading}
-          >
-            {loading ? "Preverjanje..." : "Preveri"}
-          </button>
+          error ? (
+            <button 
+              className="btn date-row-action"
+              disabled
+              style={{ background: "#fecaca", color: "#b91c1c", border: "1px solid #fca5a5", cursor: "not-allowed" }}
+            >
+              Ni na voljo
+            </button>
+          ) : (
+            <button 
+              className="btn date-row-action"
+              onClick={handleVerify}
+              disabled={loading}
+            >
+              {loading ? "Preverjanje..." : "Preveri"}
+            </button>
+          )
         )}
 
         {verified && (
@@ -464,7 +475,21 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
         </div>
       )}
 
-      {error && <div style={{ fontSize: 10, color: "red" }}>{error}</div>}
+      {error && (
+        <div style={{
+          marginTop: "8px",
+          padding: "8px 12px",
+          borderRadius: "8px",
+          background: "#fef2f2",
+          border: "1px solid #fee2e2",
+          color: "#991b1b",
+          fontSize: "12px",
+          fontWeight: "500",
+          textAlign: "left"
+        }}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }
