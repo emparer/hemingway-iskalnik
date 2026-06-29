@@ -71,7 +71,7 @@ export default function Filters({ data }: Props) {
   }
 
   const serviceOptions = [
-    { value: "AI", label: "Vse vključeno" },
+    { value: "AI", label: "All inclusive" },
     { value: "UF", label: "Nočitev z zajtrkom" },
     { value: "HP", label: "Polpenzion" },
     { value: "VP", label: "Polni penzion" },
