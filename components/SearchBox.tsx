@@ -536,6 +536,7 @@ export default function SearchBox({
               <option value="2-6">2-6 dni</option>
               <option value="7-9">7-9 dni</option>
               <option value="9-15">9-15 dni</option>
+              <option value="15-99">Več kot 15 dni</option>
             </select>
           </div>
 
@@ -544,12 +545,11 @@ export default function SearchBox({
               <label>Letališče</label>
               <select className="sg-control sg-select" value={airport} onChange={e => setAirport(e.target.value)}>
                 <option value="">Vsa letališča</option>
-                <option value="LJU">Ljubljana (LJU)</option>
-                <option value="VIE">Dunaj (VIE)</option>
-                <option value="VCE">Benetke (VCE)</option>
-                <option value="GRZ">Gradec (GRZ)</option>
                 <option value="MUC">München (MUC)</option>
-                <option value="ZAG">Zagreb (ZAG)</option>
+                <option value="VIE">Dunaj (VIE)</option>
+                <option value="SZG">Salzburg (SZG)</option>
+                <option value="GRZ">Gradec (GRZ)</option>
+                <option value="LJU">Ljubljana (LJU)</option>
               </select>
             </div>
           )}
@@ -564,13 +564,13 @@ export default function SearchBox({
           {(activeType === "pauschal" || activeType === "hotel") && (
             <>
               <div className="sg-field sg-field-service">
-                <label>Tip namestitve</label>
+                <label>Storitev</label>
                 <select className="sg-control sg-select" value={minService} onChange={e => setMinService(e.target.value)}>
                   <option value="">Vseeno</option>
                   <option value="OV">Vsaj nočitev</option>
                   <option value="BB">Vsaj nočitev z zajtrkom</option>
                   <option value="HB">Vsaj polpenzion</option>
-                  <option value="AI">Vse vključeno</option>
+                  <option value="AI">All inclusive</option>
                 </select>
               </div>
               <div className="sg-field sg-field-category">
