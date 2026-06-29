@@ -467,7 +467,22 @@ export default function SearchBox({
       "RFilter[Price]",
     ].forEach(key => params.delete(key));
 
-    params.set("type", activeType);
+    // Resolve search type based on destination/query
+    let searchType = activeType;
+    const queryNorm = normalizeSearchValue(target.query || query);
+    const isCroatia = target.RegionGroup === "100023" || queryNorm.includes("hrvaska");
+
+    if (isCroatia) {
+      const isTripRelated = queryNorm.includes("krizarjenj") || queryNorm.includes("krozna") || queryNorm.includes("potovanj");
+      if (isTripRelated) {
+        searchType = "trips";
+      } else if (activeType === "pauschal") {
+        // Croatia doesn't have flight package (pauschal) offers, so default to accommodation (hotel)
+        searchType = "hotel";
+      }
+    }
+
+    params.set("type", searchType);
     params.set("query", target.query);
     params.set("RegionGroup", target.RegionGroup);
     params.set("StartDate", startDate);
@@ -505,11 +520,17 @@ export default function SearchBox({
       ? window.open("about:blank", "_blank")
       : null;
     const target = await resolveSearchTarget();
-    const url = buildSearchUrl(target);
+    const params = buildSearchParams(target);
+    const url = (externalBaseUrl || typeof window !== "undefined" ? window.location.origin : "").replace(/\/$/, "") + "/?" + params.toString();
 
     setShowSuggestions(false);
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches) {
       setIsMobileSearchOpen(false);
+    }
+
+    const resolvedType = params.get("type") || activeType;
+    if (resolvedType !== activeType) {
+      setActiveType(resolvedType);
     }
 
     if (submitMode === "external") {
@@ -522,7 +543,7 @@ export default function SearchBox({
       return;
     }
 
-    router.push("/?" + buildSearchParams(target).toString());
+    router.push("/?" + params.toString());
   }
 
   const typeOptions = [
