@@ -71,19 +71,21 @@ export default function Filters({ data }: Props) {
   }
 
   const serviceOptions = [
-    { value: "AI", label: "All inclusive" },
+    { value: "TO", label: "Samo prevoz" },
     { value: "UF", label: "Nočitev z zajtrkom" },
     { value: "HP", label: "Polpenzion" },
     { value: "VP", label: "Polni penzion" },
-    { value: "TO", label: "Samo prevoz" },
+    { value: "AI", label: "All inclusive" },
   ];
 
   const roomOptions = [
+    { value: "OU", label: "Brez namestitve" },
+    { value: "ST", label: "Studio" },
+    { value: "AP", label: "Apartma" },
     { value: "DZ", label: "Dvoposteljna soba" },
     { value: "FZ", label: "Družinska soba" },
     { value: "SU", label: "Suita" },
     { value: "JS", label: "Junior suita" },
-    { value: "OU", label: "Brez namestitve" },
   ];
 
   const visibleCities = showAllCities ? cities : cities.slice(0, 8);
