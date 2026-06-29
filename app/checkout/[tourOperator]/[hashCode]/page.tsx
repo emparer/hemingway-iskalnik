@@ -78,10 +78,30 @@ export default async function CheckoutPage({
 
   const adultCount = Number(sp.AdultCount || 2);
   const childCount = Number(sp.ChildCount || 0);
-  const ages = (typeof sp.Ages === "string" ? sp.Ages : "")
+  const parsedAges = (typeof sp.Ages === "string" ? sp.Ages : "")
     .split(",")
     .map(v => Number(v.trim()))
     .filter(v => !Number.isNaN(v));
+
+  let ages: number[] = [];
+  if (parsedAges.length === childCount) {
+    ages = [
+      ...Array(adultCount).fill(30),
+      ...parsedAges
+    ];
+  } else if (parsedAges.length === adultCount + childCount) {
+    ages = parsedAges;
+  } else {
+    const adultPart = parsedAges.slice(0, adultCount);
+    while (adultPart.length < adultCount) {
+      adultPart.push(30);
+    }
+    const childPart = parsedAges.slice(adultCount);
+    while (childPart.length < childCount) {
+      childPart.push(childPart[0] || 8);
+    }
+    ages = [...adultPart, ...childPart];
+  }
 
   const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount, childCount, ages);
   

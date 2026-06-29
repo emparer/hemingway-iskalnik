@@ -228,12 +228,37 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
         throw new Error("Manjka organizator za preverjanje ponudbe.");
       }
 
+      const parsedAges = (ages || "")
+        .split(",")
+        .map(v => Number(v.trim()))
+        .filter(v => !Number.isNaN(v));
+
+      let finalAges: number[] = [];
+      if (parsedAges.length === childCount) {
+        finalAges = [
+          ...Array(adultCount).fill(30),
+          ...parsedAges
+        ];
+      } else if (parsedAges.length === adultCount + childCount) {
+        finalAges = parsedAges;
+      } else {
+        const adultPart = parsedAges.slice(0, adultCount);
+        while (adultPart.length < adultCount) {
+          adultPart.push(30);
+        }
+        const childPart = parsedAges.slice(adultCount);
+        while (childPart.length < childCount) {
+          childPart.push(childPart[0] || 8);
+        }
+        finalAges = [...adultPart, ...childPart];
+      }
+
       const params = new URLSearchParams({
         TourOperator: d.TourOperator,
         HashCode: d.HashCode || "",
         AdultCount: String(adultCount),
         ChildCount: String(childCount),
-        Ages: ages || Array(adultCount).fill(30).concat(Array(childCount).fill(8)).join(","),
+        Ages: finalAges.join(","),
       });
 
       const res = await fetch(`/api/ors/verify?${params.toString()}`, {
@@ -275,6 +300,33 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
 
   const checkoutHref = (() => {
     const searchParams = new URLSearchParams(qs);
+
+    const parsedAges = (searchParams.get("Ages") || "")
+      .split(",")
+      .map(v => Number(v.trim()))
+      .filter(v => !Number.isNaN(v));
+
+    let finalAges: number[] = [];
+    if (parsedAges.length === childCount) {
+      finalAges = [
+        ...Array(adultCount).fill(30),
+        ...parsedAges
+      ];
+    } else if (parsedAges.length === adultCount + childCount) {
+      finalAges = parsedAges;
+    } else {
+      const adultPart = parsedAges.slice(0, adultCount);
+      while (adultPart.length < adultCount) {
+        adultPart.push(30);
+      }
+      const childPart = parsedAges.slice(adultCount);
+      while (childPart.length < childCount) {
+        childPart.push(childPart[0] || 8);
+      }
+      finalAges = [...adultPart, ...childPart];
+    }
+    searchParams.set("Ages", finalAges.join(","));
+
     selectedExtraLabels.forEach(value => searchParams.append("extraServices", value));
     searchParams.set("ProductName", offerName);
     searchParams.set("StartDate", d.StartDate || "");
