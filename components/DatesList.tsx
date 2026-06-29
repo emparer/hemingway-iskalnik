@@ -5,8 +5,10 @@ import DateRow from "./DateRow";
 
 interface DatesListProps {
   dates: any[];
-  sp: Record<string, string>;
+  sp: any;
   adultCount: number;
+  childCount?: number;
+  ages?: string;
 }
 
 type SortField = "date" | "duration" | "serviceType" | "roomStandard" | "roomType" | "price";
@@ -24,7 +26,7 @@ function parseSloDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
-export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
+export default function DatesList({ dates, sp, adultCount, childCount = 0, ages = "" }: DatesListProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -144,6 +146,8 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
               const tourOpEnc = encodeURIComponent(d.TourOperator || sp.TourOperator || "");
               const qs = new URLSearchParams({
                 AdultCount: String(sp.AdultCount || 2),
+                ChildCount: String(sp.ChildCount || 0),
+                Ages: String(sp.Ages || ""),
                 ...(sp.query ? { query: sp.query } : {}),
                 ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
               }).toString();
@@ -158,6 +162,8 @@ export default function DatesList({ dates, sp, adultCount }: DatesListProps) {
                   hashEnc={hashEnc}
                   qs={qs}
                   adultCount={adultCount}
+                  childCount={childCount}
+                  ages={ages}
                   type={sp.type}
                 />
               );

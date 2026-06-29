@@ -12,6 +12,8 @@ interface Props {
   defaultStartDate?: string;
   defaultEndDate?: string;
   defaultAdultCount?: number;
+  defaultChildCount?: number;
+  defaultAges?: string;
   defaultDepartureAirports?: string;
   type?: string;
   compact?: boolean;
@@ -95,12 +97,26 @@ function IsoToSlovenianDate(dateStr: string): string {
   return "";
 }
 
+function parseChildAge(defaultAges: string, adultCount: number): number {
+  if (defaultAges) {
+    const parts = defaultAges.split(",");
+    if (parts.length > adultCount) {
+      return Number(parts[adultCount]) || 8;
+    }
+    const non30 = parts.map(Number).filter(x => x !== 30);
+    if (non30.length > 0) return non30[0];
+  }
+  return 8;
+}
+
 export default function SearchBox({
   defaultQuery = "",
   defaultRegionGroup = "",
   defaultStartDate = "",
   defaultEndDate = "",
   defaultAdultCount = 2,
+  defaultChildCount = 0,
+  defaultAges = "",
   defaultDepartureAirports = "",
   type = "pauschal",
   compact = false,
@@ -117,6 +133,8 @@ export default function SearchBox({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [adultCount, setAdultCount] = useState(defaultAdultCount);
+  const [childCount, setChildCount] = useState(defaultChildCount);
+  const [childAge, setChildAge] = useState(() => parseChildAge(defaultAges, defaultAdultCount));
   const [duration, setDuration] = useState(defaultDuration);
   const [activeType, setActiveType] = useState(type);
   
@@ -139,6 +157,8 @@ export default function SearchBox({
     setStartDate(defaultStartDate);
     setEndDate(defaultEndDate);
     setAdultCount(defaultAdultCount);
+    setChildCount(defaultChildCount);
+    setChildAge(parseChildAge(defaultAges, defaultAdultCount));
     setAirport(defaultDepartureAirports);
     setActiveType(type);
     setDuration(defaultDuration);
@@ -147,6 +167,8 @@ export default function SearchBox({
     setSubType(defaultSubType);
   }, [
     defaultAdultCount,
+    defaultChildCount,
+    defaultAges,
     defaultEndDate,
     defaultQuery,
     defaultStartDate,
@@ -348,6 +370,8 @@ export default function SearchBox({
       "StartDate",
       "EndDate",
       "AdultCount",
+      "ChildCount",
+      "Ages",
       "Duration",
       "DepartureAirports",
       "MinCategory",
@@ -369,6 +393,8 @@ export default function SearchBox({
     params.set("StartDate", startDate);
     params.set("EndDate", endDate);
     params.set("AdultCount", String(adultCount));
+    params.set("ChildCount", String(childCount));
+    params.set("Ages", Array(adultCount).fill(30).concat(Array(childCount).fill(childAge)).join(","));
     params.set("Page", "0");
 
     if (duration) params.set("Duration", duration);
@@ -555,11 +581,37 @@ export default function SearchBox({
           )}
 
           <div className="sg-field sg-field-adults">
-            <label>Odrasli</label>
-            <select className="sg-control sg-select" value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
-              {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Odrasli</label>
+                <select className="sg-control sg-select" value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
+                  {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Otroci</label>
+                <select className="sg-control sg-select" value={childCount} onChange={e => setChildCount(Number(e.target.value))}>
+                  {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
+
+          {childCount > 0 && (
+            <div className="sg-field sg-field-child-age">
+              <label>Starost otrok: {childAge} let</label>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "38px" }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="17"
+                  value={childAge}
+                  onChange={e => setChildAge(Number(e.target.value))}
+                  style={{ flex: 1, accentColor: "var(--c)" }}
+                />
+              </div>
+            </div>
+          )}
 
           {(activeType === "pauschal" || activeType === "hotel") && (
             <>

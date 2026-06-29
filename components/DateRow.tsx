@@ -11,6 +11,8 @@ interface Props {
   hashEnc: string;
   qs: string;
   adultCount: number;
+  childCount?: number;
+  ages?: string;
   type?: string;
 }
 
@@ -211,7 +213,7 @@ function readStatusTone(result: any) {
   };
 }
 
-export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }: Props) {
+export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCount = 0, ages = "", type }: Props) {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +232,8 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }:
         TourOperator: d.TourOperator,
         HashCode: d.HashCode || "",
         AdultCount: String(adultCount),
-        Ages: Array(adultCount).fill(30).join(","),
+        ChildCount: String(childCount),
+        Ages: ages || Array(adultCount).fill(30).concat(Array(childCount).fill(8)).join(","),
       });
 
       const res = await fetch(`/api/ors/verify?${params.toString()}`, {
@@ -255,8 +258,8 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }:
     ? readVerifiedPrice(verified, Number(d.Price || 0))
     : Number(d.Price || 0);
   const totalPrice = verified
-    ? readVerifiedTotalPrice(verified, perPersonPrice, adultCount)
-    : perPersonPrice * adultCount;
+    ? readVerifiedTotalPrice(verified, perPersonPrice, adultCount + childCount)
+    : perPersonPrice * (adultCount + childCount);
   const service = verified?.ServiceDesc?.[0] || {};
   const statusTone = verified ? readStatusTone(verified) : null;
   const flightLines = verified ? readFlightLines(verified) : [];
@@ -378,7 +381,7 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, type }:
                 ))
               ) : (
                 <div className="verified-list-row">
-                  <span>{formatTravelersLabel(adultCount)}</span>
+                  <span>{formatTravelersLabel(adultCount + childCount)}</span>
                   <strong>{formatCurrency(totalPrice)}</strong>
                 </div>
               )}

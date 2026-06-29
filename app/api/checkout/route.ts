@@ -30,11 +30,16 @@ export async function POST(req: NextRequest) {
   const tourOperator = String(form.get("tourOperator") || "");
   const hashCode = String(form.get("hashCode") || "");
   const adultCount = Number(form.get("AdultCount") || 2);
+  const childCount = Number(form.get("ChildCount") || 0);
+  const agesStr = String(form.get("Ages") || "");
+  const ages = agesStr ? agesStr.split(",").map(Number) : [];
 
   console.log("[checkout] received identifiers:", {
     tourOperator,
     hashCode,
     adultCount,
+    childCount,
+    ages,
   });
 
   if (!tourOperator || !hashCode) {
@@ -64,20 +69,23 @@ export async function POST(req: NextRequest) {
   const extraServiceNotes = selectedExtraServices.length
     ? ["Izbrane dodatne storitve:", ...selectedExtraServices.map(service => `- ${service}`)].join("\n")
     : "";
-  const comments = note.includes("Izbrane dodatne storitve:")
+  const comments = note.includes("Izbrane dodatve storitve:") || note.includes("Izbrane dodatne storitve:")
     ? note
     : [note, extraServiceNotes].filter(Boolean).join("\n\n");
 
   const travelers: Record<string, any> = {};
+  const totalCount = adultCount + childCount;
 
-  for (let i = 0; i < adultCount; i++) {
+  for (let i = 0; i < totalCount; i++) {
     const firstName = String(form.get(`passengers[${i}][name]`) || "");
     const lastName = String(form.get(`passengers[${i}][surname]`) || "");
     const gender = String(form.get(`passengers[${i}][gender]`) || "M");
     const birthday = String(form.get(`passengers[${i}][birthday]`) || "");
 
+    const isChild = i >= adultCount;
+
     travelers[String(i + 1)] = {
-      PassengerType: gender === "Ž" ? "F" : "H",
+      PassengerType: isChild ? "K" : (gender === "Ž" ? "F" : "H"),
       FirstName: firstName,
       LastName: lastName,
       BirthDate: slDateToIso(birthday),
@@ -87,6 +95,8 @@ export async function POST(req: NextRequest) {
   const payload = {
     Language: "si",
     AdultCount: adultCount,
+    ChildCount: childCount,
+    Ages: ages,
 
     Travelers: travelers,
 

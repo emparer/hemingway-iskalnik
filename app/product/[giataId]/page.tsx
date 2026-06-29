@@ -49,6 +49,8 @@ export default async function ProductPage({
     GiataID: giataId,
     type: sp.type || "pauschal",
     AdultCount: Number(sp.AdultCount || 2),
+    ChildCount: sp.ChildCount,
+    Ages: sp.Ages,
     DepartureAirports: depAirport || undefined,
   });
 
@@ -57,6 +59,8 @@ export default async function ProductPage({
     GiataID: giataId,
     type: sp.type || "pauschal",
     AdultCount: Number(sp.AdultCount || 2),
+    ChildCount: sp.ChildCount,
+    Ages: sp.Ages,
     Count: 500, // Load all available offers up to 500
     DepartureAirports: depAirport || undefined,
   });
@@ -165,11 +169,13 @@ const formatDate = (dateStr: string) => {
   return (
     <main className="container page-shell">
       <SearchBox
-        defaultQuery={sp.query || ""}
-        defaultRegionGroup={String(sp.RegionGroup || prod.Location?.RegionGroupID || "")}
+        defaultQuery={sp.query !== undefined ? String(sp.query) : ""}
+        defaultRegionGroup={sp.RegionGroup !== undefined ? String(sp.RegionGroup) : String(prod.Location?.RegionGroupID || "")}
         defaultStartDate={sp.StartDate || ""}
         defaultEndDate={sp.EndDate || ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
+        defaultChildCount={Number(sp.ChildCount || 0)}
+        defaultAges={sp.Ages ? String(sp.Ages) : ""}
         defaultDepartureAirports={depAirport}
         type={sp.type || "pauschal"}
         defaultDuration={sp.Duration ? String(sp.Duration) : ""}
@@ -221,7 +227,10 @@ const formatDate = (dateStr: string) => {
                 </div>
                 <div className="detail-stat">
                   <span>Potniki</span>
-                  <strong>{sp.AdultCount || 2} odrasli</strong>
+                  <strong>
+                    {Number(sp.AdultCount || 2)} odrasli
+                    {Number(sp.ChildCount || 0) > 0 ? `, ${sp.ChildCount} otrok` : ""}
+                  </strong>
                 </div>
                 <div className="detail-stat">
                   <span>Odhod med</span>
@@ -251,6 +260,8 @@ const formatDate = (dateStr: string) => {
           dates={dates}
           sp={{ ...sp, TourOperator: resolvedTourOperator }}
           adultCount={Number(sp.AdultCount || 2)}
+          childCount={Number(sp.ChildCount || 0)}
+          ages={sp.Ages ? String(sp.Ages) : ""}
         />
       </section>
 

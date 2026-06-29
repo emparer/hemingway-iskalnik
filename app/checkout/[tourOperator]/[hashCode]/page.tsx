@@ -48,18 +48,24 @@ export default async function CheckoutPage({
   const checkoutError = typeof sp.error === "string" ? sp.error : "";
 
   const adultCount = Number(sp.AdultCount || 2);
-  const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount);
+  const childCount = Number(sp.ChildCount || 0);
+  const ages = (typeof sp.Ages === "string" ? sp.Ages : "")
+    .split(",")
+    .map(v => Number(v.trim()))
+    .filter(v => !Number.isNaN(v));
+
+  const verify = await verifyOffer(tourOperator, decodeURIComponent(hashCode), adultCount, childCount, ages);
   
   // Get verified total price if available, otherwise calculate from per-person price
   const verifiedTotal = 
     verify.Price?.TotalPrice ?? 
     verify.TotalPrice ?? 
     verify.Total ?? 
-    (verify.Price?.PricePerPerson ? Number(verify.Price.PricePerPerson) * adultCount : undefined) ??
+    (verify.Price?.PricePerPerson ? Number(verify.Price.PricePerPerson) * (adultCount + childCount) : undefined) ??
     (typeof verify.Price === "number" ? verify.Price : undefined);
 
   const fallbackPerPerson = sp.Price ? parsePriceValue(sp.Price) : 1118;
-  const fallbackTotal = fallbackPerPerson ? fallbackPerPerson * adultCount : 1118 * adultCount;
+  const fallbackTotal = fallbackPerPerson ? fallbackPerPerson * (adultCount + childCount) : 1118 * (adultCount + childCount);
 
   const offerPrice = !verify.usingMock && verifiedTotal !== undefined
     ? Number(verifiedTotal)
@@ -229,7 +235,7 @@ export default async function CheckoutPage({
         <div className="checkout-hero-stats">
           <div className="checkout-hero-stat">
             <span>Potniki</span>
-            <strong>{adultCount}</strong>
+            <strong>{adultCount + childCount}</strong>
           </div>
           <div className="checkout-hero-stat">
             <span>Rezervacija</span>
@@ -242,6 +248,8 @@ export default async function CheckoutPage({
         <input type="hidden" name="tourOperator" value={tourOperator} />
         <input type="hidden" name="hashCode" value={decodeURIComponent(hashCode)} />
         <input type="hidden" name="AdultCount" value={adultCount} />
+        <input type="hidden" name="ChildCount" value={childCount} />
+        <input type="hidden" name="Ages" value={sp.Ages ? String(sp.Ages) : ""} />
         <section className="checkout-main">
           <div className="checkout-box checkout-box-accent">
             <div className="checkout-section-head">
@@ -284,20 +292,24 @@ export default async function CheckoutPage({
             </div>
 
             <div className="traveler-stack">
-            {Array.from({ length: adultCount }).map((_, i) => (
-              <div className="traveler-card" key={i}>
-                <div className="traveler-card-head">
-                  <span className="traveler-index">Potnik {i + 1}</span>
-                  <span className="traveler-hint">obvezni podatki</span>
+            {Array.from({ length: adultCount + childCount }).map((_, i) => {
+              const isChild = i >= adultCount;
+              const passengerAge = isChild ? (ages[i] || 8) : undefined;
+              return (
+                <div className="traveler-card" key={i}>
+                  <div className="traveler-card-head">
+                    <span className="traveler-index">Potnik {i + 1} {isChild ? `(Otrok, starost ${passengerAge} let)` : "(Odrasli)"}</span>
+                    <span className="traveler-hint">obvezni podatki</span>
+                  </div>
+                  <div className="field-grid checkout-field-grid">
+                    <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} required /></div>
+                    <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} required /></div>
+                    <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} required /></div>
+                    <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`} required><option>M</option><option>Ž</option></select></div>
+                  </div>
                 </div>
-                <div className="field-grid checkout-field-grid">
-                  <div className="form-field"><label>Ime *</label><input name={`passengers[${i}][name]`} required /></div>
-                  <div className="form-field"><label>Priimek *</label><input name={`passengers[${i}][surname]`} required /></div>
-                  <div className="form-field"><label>Datum rojstva *</label><input placeholder="DD.MM.LLLL" name={`passengers[${i}][birthday]`} required /></div>
-                  <div className="form-field"><label>Spol *</label><select name={`passengers[${i}][gender]`} required><option>M</option><option>Ž</option></select></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             </div>
           </div>
 

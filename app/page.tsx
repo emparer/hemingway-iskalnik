@@ -42,6 +42,8 @@ export default async function Home({
     StartDate:   sp.StartDate,
     EndDate:     sp.EndDate,
     AdultCount:  sp.AdultCount,
+    ChildCount:  sp.ChildCount,
+    Ages:        sp.Ages,
     Duration:    sp.Duration,
     ServiceType: sp.ServiceType,
     Page:        sp.Page        || "0",
@@ -108,6 +110,8 @@ export default async function Home({
         defaultStartDate={sp.StartDate ? String(sp.StartDate) : ""}
         defaultEndDate={sp.EndDate ? String(sp.EndDate) : ""}
         defaultAdultCount={Number(sp.AdultCount || 2)}
+        defaultChildCount={Number(sp.ChildCount || 0)}
+        defaultAges={sp.Ages ? String(sp.Ages) : ""}
         defaultDepartureAirports={depAirport}
         type={Array.isArray(type) ? type[0] : type}
         defaultDuration={sp.Duration ? String(sp.Duration) : ""}

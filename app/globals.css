@@ -452,6 +452,7 @@ textarea {
 .sg-field-airport,
 .sg-field-subtype { grid-column: 5; grid-row: 1; }
 .sg-field-adults { grid-column: 6; grid-row: 1; }
+.sg-field-child-age { grid-column: 3 / span 2; grid-row: 2; }
 .sg-field-service { grid-column: 1; grid-row: 2; }
 .sg-field-category { grid-column: 2; grid-row: 2; }
 .search-grid > .btn-search {
@@ -1735,6 +1736,7 @@ body.embed-route .search-form.mobile-collapsed {
   .search-grid > .btn-search { grid-column: 4; grid-row: 2; }
   .sg-field-service { grid-column: 1 / span 2; grid-row: 3; }
   .sg-field-category { grid-column: 3 / span 2; grid-row: 3; }
+  .sg-field-child-age { grid-column: 1 / span 2; grid-row: 4; }
   .layout,
   .hero,
   .checkout-hero,
@@ -2020,6 +2022,7 @@ body.embed-route .search-form.mobile-collapsed {
   .sg-field-adults,
   .sg-field-service,
   .sg-field-category,
+  .sg-field-child-age,
   .search-grid > .btn-search {
     grid-column: auto;
     grid-row: auto;
