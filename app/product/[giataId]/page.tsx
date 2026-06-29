@@ -76,13 +76,31 @@ export default async function ProductPage({
     matchingItem,
   });
 
-  const infoData = resolvedTourOperator
+  let infoData = resolvedTourOperator
     ? await getProductInfo({
         GiataID: giataId,
         TourOperator: resolvedTourOperator,
         StartDate: sp.StartDate,
       })
     : {};
+
+  // If the resolved operator has no images, try other operators offering this hotel
+  if ((!infoData?.Images || infoData.Images.length === 0) && matchingItem?.TourOperators) {
+    const otherOperators = Object.keys(matchingItem.TourOperators).filter(
+      op => op !== resolvedTourOperator
+    );
+    for (const op of otherOperators) {
+      const fallbackInfo = await getProductInfo({
+        GiataID: giataId,
+        TourOperator: op,
+        StartDate: sp.StartDate,
+      });
+      if (fallbackInfo?.Images && fallbackInfo.Images.length > 0) {
+        infoData = fallbackInfo;
+        break;
+      }
+    }
+  }
 
   const prod = getFirstProduct(productData, giataId);
   const dates = dateData.Dates || [];
@@ -113,39 +131,60 @@ const formatDate = (dateStr: string) => {
     // Best source: ORS product info Images array
     if (Array.isArray(infoData?.Images)) {
       for (const img of infoData.Images) {
-        const full = img.URLFull || img.Full || img.URL;
-        const thumb = img.Thumb || img.Thumbnail || img.URL || full;
+        let full = img.URLFull || img.Full || img.URL;
+        let thumb = img.Thumb || img.Thumbnail || img.URL || full;
 
-        if (
-          full &&
-          typeof full === "string" &&
-          full.startsWith("http") &&
-          !full.includes("no-image")
-        ) {
-          pictures.push({
-            full,
-            thumb: thumb || full,
-          });
+        if (full && typeof full === "string") {
+          full = full.trim();
+          if (full.startsWith("//")) {
+            full = "https:" + full;
+          }
+          if (thumb && typeof thumb === "string") {
+            thumb = thumb.trim();
+            if (thumb.startsWith("//")) {
+              thumb = "https:" + thumb;
+            }
+          }
+
+          if (full.startsWith("http") && !full.includes("no-image")) {
+            pictures.push({
+              full,
+              thumb: thumb || full,
+            });
+          }
         }
       }
     }
 
     // Fallback only if there are no gallery images
     if (!pictures.length) {
-      const full =
+      let full =
         infoData?.Product?.Picture?.Full ||
         prod?.Picture?.Large ||
         prod?.Picture?.Full;
-      const thumb =
+      let thumb =
         infoData?.Product?.Picture?.Thumbnail ||
         prod?.Picture?.Thumbnail ||
         full;
 
-      if (full) {
-        pictures.push({
-          full,
-          thumb: thumb || full,
-        });
+      if (full && typeof full === "string") {
+        full = full.trim();
+        if (full.startsWith("//")) {
+          full = "https:" + full;
+        }
+        if (thumb && typeof thumb === "string") {
+          thumb = thumb.trim();
+          if (thumb.startsWith("//")) {
+            thumb = "https:" + thumb;
+          }
+        }
+
+        if (full.startsWith("http") && !full.includes("no-image")) {
+          pictures.push({
+            full,
+            thumb: thumb || full,
+          });
+        }
       }
     }
 
