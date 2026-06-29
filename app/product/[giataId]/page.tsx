@@ -191,13 +191,7 @@ const formatDate = (dateStr: string) => {
     return pictures;
   }
 
-  let galleryPictures = collectGalleryPictures(infoData, prod);
-  if (galleryPictures.length === 0) {
-    galleryPictures = [{
-      full: "https://images.unsplash.com/photo-1540553016722-983e48a2cd10?auto=format&fit=crop&w=1200&q=80",
-      thumb: "https://images.unsplash.com/photo-1540553016722-983e48a2cd10?auto=format&fit=crop&w=150&q=80"
-    }];
-  }
+  const galleryPictures = collectGalleryPictures(infoData, prod);
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
 

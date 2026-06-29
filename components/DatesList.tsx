@@ -174,7 +174,7 @@ export default function DatesList({ dates, sp, adultCount, childCount = 0, ages 
                 ...(sp.RegionGroup ? { RegionGroup: sp.RegionGroup } : {}),
               }).toString();
 
-              const rowKey = d.HashCode || `${d.StartDate}-${d.Duration}-${d.RoomName}-${d.Price}-${indexInSorted}`;
+              const rowKey = d.HashCode ? `${d.HashCode}-${indexInSorted}` : `${d.StartDate}-${d.Duration}-${d.RoomName}-${d.Price}-${indexInSorted}`;
 
               return (
                 <DateRow
