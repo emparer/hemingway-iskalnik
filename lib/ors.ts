@@ -74,21 +74,47 @@ function buildSearchPayload(params: SearchParams) {
     return [val];
   }
 
+  const adultCount = toNumberIfPossible(params.AdultCount || 2);
+  const childCount = (params.ChildCount !== undefined && params.ChildCount !== "") ? toNumberIfPossible(params.ChildCount) : 0;
+
   const payload: Record<string, any> = {
     Language: params.Language || "si",
     StartDate: params.StartDate || "19.05.2026",
     EndDate: params.EndDate || "18.05.2027",
-    AdultCount: toNumberIfPossible(params.AdultCount || 2),
+    AdultCount: adultCount,
     Page: toNumberIfPossible(params.Page || 0),
     Count: toNumberIfPossible(params.PageSize || params.Count || 12),
   };
 
   if (params.ChildCount !== undefined && params.ChildCount !== "") {
-    payload.ChildCount = toNumberIfPossible(params.ChildCount);
+    payload.ChildCount = childCount;
   }
-  if (params.Ages) {
-    payload.Ages = toArray(params.Ages).map(Number);
+
+  const parsedAges = toArray(params.Ages)
+    .map(Number)
+    .filter(v => !Number.isNaN(v));
+
+  let finalAges: number[] = [];
+  if (parsedAges.length === childCount) {
+    finalAges = [
+      ...Array(adultCount).fill(30),
+      ...parsedAges
+    ];
+  } else if (parsedAges.length === adultCount + childCount) {
+    finalAges = parsedAges;
+  } else {
+    const adultPart = parsedAges.slice(0, adultCount);
+    while (adultPart.length < adultCount) {
+      adultPart.push(30);
+    }
+    const childPart = parsedAges.slice(adultCount);
+    while (childPart.length < childCount) {
+      childPart.push(childPart[0] || 8);
+    }
+    finalAges = [...adultPart, ...childPart];
   }
+
+  payload.Ages = finalAges;
 
   if (params.TourOperator) payload.TourOperator = params.TourOperator;
   if (params.RegionGroup) payload.RegionGroup = toNumberIfPossible(params.RegionGroup);
