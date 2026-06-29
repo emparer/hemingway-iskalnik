@@ -352,7 +352,18 @@ export default async function CheckoutPage({
             </div>
             <label className="check-terms choice-card choice-card-strong">
               <input type="checkbox" name="terms" required />
-              Skrbno sem prebral pogoje poslovanja in jih potrjujem.
+              <span>
+                Skrbno sem prebral{" "}
+                <a
+                  href="https://www.hemingway.si/o-nas/splosni-pogoji/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "underline", color: "inherit" }}
+                >
+                  pogoje poslovanja
+                </a>{" "}
+                in jih potrjujem.
+              </span>
             </label>
           </div>
         </section>
