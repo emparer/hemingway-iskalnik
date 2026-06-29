@@ -62,7 +62,7 @@ type SearchSuggestion =
       label: string;
       sublabel: string;
       RegionGroup: string;
-      Region: string;
+      Region?: string;
     };
 
 function normalizeSearchValue(value?: string) {
@@ -229,23 +229,54 @@ export default function SearchBox({
         const locations: QuickSearchLocation[] = results.Locations || [];
         const regions: QuickSearchRegion[] = results.Regions || [];
 
+        // Extract unique RegionGroups from locations and regions
+        const regionGroupsMap = new Map<string, { id: string; name: string }>();
+        const collectGroup = (item: any) => {
+          if (item.RegionGroupID && item.RegionGroupName) {
+            regionGroupsMap.set(String(item.RegionGroupID), {
+              id: String(item.RegionGroupID),
+              name: item.RegionGroupName,
+            });
+          }
+        };
+        locations.forEach(collectGroup);
+        regions.forEach(collectGroup);
+
+        const queryNorm = normalizeSearchValue(trimmedQuery);
+        const matchingGroups = Array.from(regionGroupsMap.values()).filter(group => {
+          const groupNorm = normalizeSearchValue(group.name);
+          return groupNorm.includes(queryNorm) || queryNorm.includes(groupNorm);
+        });
+
         const nextSuggestions: SearchSuggestion[] = [
-          ...locations.map(item => ({
-            kind: "location" as const,
-            label: item.LocationName || "Lokacija",
-            sublabel: [item.RegionName, item.RegionGroupName].filter(Boolean).join(", "),
-            RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
-            Region: item.RegionID ? String(item.RegionID) : undefined,
-            Location: String(item.LocationID),
+          ...matchingGroups.map(group => ({
+            kind: "region" as const,
+            label: group.name,
+            sublabel: "Država / regijska skupina",
+            RegionGroup: group.id,
           })),
           ...regions.map(item => ({
             kind: "region" as const,
             label: item.RegionName || "Regija",
             sublabel: item.RegionGroupName || "",
             RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
-            Region: String(item.RegionID),
+            Region: item.RegionID ? String(item.RegionID) : undefined,
           })),
         ];
+
+        // Only include locations (microlocations) if we didn't match any country/region groups
+        if (matchingGroups.length === 0) {
+          nextSuggestions.push(
+            ...locations.map(item => ({
+              kind: "location" as const,
+              label: item.LocationName || "Lokacija",
+              sublabel: [item.RegionName, item.RegionGroupName].filter(Boolean).join(", "),
+              RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
+              Region: item.RegionID ? String(item.RegionID) : undefined,
+              Location: String(item.LocationID),
+            }))
+          );
+        }
 
         const dedupedSuggestions = nextSuggestions.filter((item, index, arr) => {
           const key = `${item.kind}:${item.label}:${item.sublabel}`;
@@ -306,6 +337,39 @@ export default function SearchBox({
       const regions: QuickSearchRegion[] = results.Regions || [];
       const products: QuickSearchProduct[] = results.Products || [];
       const normalizedQuery = normalizeSearchValue(trimmedQuery);
+
+      // Check if query matches a RegionGroup name (e.g. Grčija)
+      const regionGroupsMap = new Map<string, { id: string; name: string }>();
+      const collectGroup = (item: any) => {
+        if (item.RegionGroupID && item.RegionGroupName) {
+          regionGroupsMap.set(String(item.RegionGroupID), {
+            id: String(item.RegionGroupID),
+            name: item.RegionGroupName,
+          });
+        }
+      };
+      locations.forEach(collectGroup);
+      regions.forEach(collectGroup);
+
+      const matchingGroups = Array.from(regionGroupsMap.values()).filter(group => {
+        const groupNorm = normalizeSearchValue(group.name);
+        return groupNorm.includes(normalizedQuery) || normalizedQuery.includes(groupNorm);
+      });
+
+      if (matchingGroups.length > 0) {
+        matchingGroups.sort((a, b) => {
+          const aNorm = normalizeSearchValue(a.name);
+          const bNorm = normalizeSearchValue(b.name);
+          const aDiff = Math.abs(aNorm.length - normalizedQuery.length);
+          const bDiff = Math.abs(bNorm.length - normalizedQuery.length);
+          return aDiff - bDiff;
+        });
+
+        return {
+          query: matchingGroups[0].name,
+          RegionGroup: matchingGroups[0].id,
+        };
+      }
 
       const exactLocation = locations.find(item => normalizeSearchValue(item.LocationName) === normalizedQuery);
       if (exactLocation?.LocationID) {
