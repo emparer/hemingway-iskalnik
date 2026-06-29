@@ -370,20 +370,6 @@ export default async function CheckoutPage({
             {duration && <div className="summary-line"><span>Trajanje</span><b>{duration} dni</b></div>}
             <div className="summary-line"><span>Soba</span><b>{roomName}</b></div>
             <div className="summary-line"><span>Storitev</span><b>{serviceName}</b></div>
-            {sp.type === "pauschal" && (
-              <div className="summary-line">
-                <span>Letalski prevoz</span>
-                <b>
-                  {flightLines.length > 0 ? (
-                    flightLines.join(" / ")
-                  ) : flightRouteFallback ? (
-                    flightRouteFallback
-                  ) : (
-                    "Urnik poletov še ni potrjen. Točne ure letov vam sporočimo ob potrditvi rezervacije."
-                  )}
-                </b>
-              </div>
-            )}
             {sp.type === "trips" && (
               <div className="summary-line">
                 <span>Prevoz / Vstopno mesto</span>
