@@ -148,8 +148,31 @@ export default async function Home({
           </div>
 
           {results.length === 0 ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--muted)" }}>
-              Ni rezultatov za izbrane kriterije.
+            <div style={{
+              padding: "40px 24px",
+              textAlign: "center",
+              color: "var(--ink)",
+              background: "#fff",
+              borderRadius: "24px",
+              border: "1px solid var(--border)",
+              boxShadow: "var(--shadow-sm)",
+              maxWidth: "600px",
+              margin: "40px auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--c)", margin: 0 }}>Ni rezultatov za izbrane kriterije</h3>
+              <p style={{ color: "var(--muted)", fontSize: "14px", lineHeight: "1.6", margin: 0 }}>
+                Za izbrane iskalne parametre trenutno ni na voljo nobenih ponudb. Prosimo, spremenite ali razširite svoje iskalne kriterije (npr. drug termin, storitev ali kategorija).
+              </p>
+              <p style={{ color: "var(--muted)", fontSize: "14px", lineHeight: "1.6", margin: 0 }}>
+                Lahko pa nam pošljete povpraševanje s podatki o vaših želenih počitnicah na{" "}
+                <a href="mailto:info@hemingway.si" style={{ color: "var(--c)", textDecoration: "underline", fontWeight: "600" }}>
+                  info@hemingway.si
+                </a>{" "}
+                in z veseljem vam bomo pripravili ponudbo po vaši meri!
+              </p>
             </div>
           ) : (
             <div className="product-grid">

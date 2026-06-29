@@ -134,8 +134,30 @@ export default function DatesList({ dates, sp, adultCount, childCount = 0, ages 
       </div>
 
       {sortedDates.length === 0 ? (
-        <div style={{ padding: "24px 4px", color: "var(--muted)", fontSize: 14 }}>
-          Ni razpoložljivih terminov za izbrane filtre.
+        <div style={{
+          padding: "32px 20px",
+          textAlign: "center",
+          color: "var(--ink)",
+          background: "#fff",
+          borderRadius: "20px",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          marginTop: "20px"
+        }}>
+          <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--c)", margin: 0 }}>Ni razpoložljivih terminov</h4>
+          <p style={{ color: "var(--muted)", fontSize: "13.5px", lineHeight: "1.5", margin: 0 }}>
+            Za izbrane filtre trenutno ni razpoložljivih terminov. Prosimo, prilagodite ali odstranite filtre zgoraj oz. spremenite iskalne parametre.
+          </p>
+          <p style={{ color: "var(--muted)", fontSize: "13.5px", lineHeight: "1.5", margin: 0 }}>
+            Lahko pa nam pošljete e-pošto z vašimi željami na{" "}
+            <a href="mailto:info@hemingway.si" style={{ color: "var(--c)", textDecoration: "underline", fontWeight: "600" }}>
+              info@hemingway.si
+            </a>{" "}
+            in poiskali bomo primerno ponudbo za vas!
+          </p>
         </div>
       ) : (
         <>
