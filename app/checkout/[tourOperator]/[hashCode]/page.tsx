@@ -392,7 +392,7 @@ export default async function CheckoutPage({
             </div>
             <div className="choice-stack">
               <label className="check-terms choice-card"><input type="checkbox" /> Želim zavarovati aranžma za primer odpovedi.</label>
-              <label className="check-terms choice-card"><input type="checkbox" /> Želim skleniti zdravstveno asistenco Coris.</label>
+              <label className="check-terms choice-card"><input type="checkbox" /> Želim skleniti zdravstveno zavarovanje z asistenco v tujini</label>
             </div>
           </div>
 
