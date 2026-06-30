@@ -4,6 +4,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { normalizeFilterList } from "@/lib/filter-list";
+import { sanitizeSearchParams } from "@/lib/query-params";
 
 interface Props {
   data: any;
@@ -60,6 +61,7 @@ export default function Filters({ data }: Props) {
       existing.filter(v => v !== value).forEach(v => params.append(key, v));
     }
     params.set("Page", "0");
+    sanitizeSearchParams(params);
     startT(() => router.push("?" + params.toString(), { scroll: false }));
   }
 
@@ -67,6 +69,7 @@ export default function Filters({ data }: Props) {
     const params = new URLSearchParams(sp.toString());
     params.set("RFilter[Price]", `${priceMin}, ${maxPrice}`);
     params.set("Page", "0");
+    sanitizeSearchParams(params);
     router.push("?" + params.toString(), { scroll: false });
   }
 

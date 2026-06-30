@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { buildFallbackSearchTarget, type ResolvedSearchTarget } from "@/lib/search-target";
 import { getMinimumServiceCodes } from "@/lib/service-codes";
+import { sanitizeSearchParams } from "@/lib/query-params";
+import {
+  buildQuickSearchSuggestions,
+  type QuickSearchLocation,
+  type QuickSearchRegion,
+  type SearchSuggestion,
+} from "@/lib/search-suggestions";
 
 interface Props {
   defaultQuery?: string;
@@ -25,52 +32,12 @@ interface Props {
   defaultSubType?: string;
 }
 
-interface QuickSearchLocation {
-  LocationName?: string;
-  LocationID?: number | string;
-  RegionGroupID?: number | string;
-  RegionGroupName?: string;
-  RegionID?: number | string;
-  RegionName?: string;
-}
-
-interface QuickSearchRegion {
-  RegionName?: string;
-  RegionID?: number | string;
-  RegionGroupID?: number | string;
-  RegionGroupName?: string;
-}
-
 interface QuickSearchProduct {
   ProductName?: string;
   ProductID?: number | string;
   Type?: string;
   Location?: QuickSearchLocation;
 }
-
-type SearchSuggestion =
-  | {
-      kind: "region_group";
-      label: string;
-      sublabel: string;
-      RegionGroup: string;
-      Region?: string;
-    }
-  | {
-      kind: "region";
-      label: string;
-      sublabel: string;
-      RegionGroup: string;
-      Region?: string;
-    }
-  | {
-      kind: "location";
-      label: string;
-      sublabel: string;
-      RegionGroup: string;
-      Region?: string;
-      Location?: string;
-    };
 
 function normalizeSearchValue(value?: string) {
   return (value || "")
@@ -236,71 +203,16 @@ export default function SearchBox({
         const locations: QuickSearchLocation[] = results.Locations || [];
         const regions: QuickSearchRegion[] = results.Regions || [];
 
-        // Extract unique RegionGroups from locations and regions
-        const regionGroupsMap = new Map<string, { id: string; name: string }>();
-        const collectGroup = (item: any) => {
-          if (item.RegionGroupID && item.RegionGroupName) {
-            regionGroupsMap.set(String(item.RegionGroupID), {
-              id: String(item.RegionGroupID),
-              name: item.RegionGroupName,
-            });
-          }
-        };
-        locations.forEach(collectGroup);
-        regions.forEach(collectGroup);
-
-        const queryNorm = normalizeSearchValue(trimmedQuery);
-        const matchingGroups = Array.from(regionGroupsMap.values()).filter(group => {
-          const groupNorm = normalizeSearchValue(group.name);
-          return groupNorm.includes(queryNorm) || queryNorm.includes(groupNorm);
+        const nextSuggestions = buildQuickSearchSuggestions({
+          activeType,
+          trimmedQuery,
+          currentDefaultRegionGroup,
+          locations,
+          regions,
         });
 
-        const nextSuggestions: SearchSuggestion[] = [
-          ...matchingGroups.map(group => ({
-            kind: "region_group" as const,
-            label: group.name,
-            sublabel: "Država / regijska skupina",
-            RegionGroup: group.id,
-          })),
-          ...regions.map(item => ({
-            kind: "region" as const,
-            label: item.RegionName || "Regija",
-            sublabel: item.RegionGroupName || "",
-            RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
-            Region: item.RegionID ? String(item.RegionID) : undefined,
-          })),
-        ];
-
-        // If we matched a country/region group, inject the clean country name as the Kraj suggestion,
-        // and do not include the individual tiny microlocations (resort towns).
-        if (matchingGroups.length > 0) {
-          const countryName = matchingGroups[0].name.replace(/\s*\(otoki\)|\s*\(celina\)/gi, "").trim();
-          nextSuggestions.push({
-            kind: "location" as const,
-            label: countryName,
-            sublabel: "Država",
-            RegionGroup: matchingGroups[0].id,
-          });
-        } else {
-          nextSuggestions.push(
-            ...locations.map(item => ({
-              kind: "location" as const,
-              label: item.LocationName || "Lokacija",
-              sublabel: [item.RegionName, item.RegionGroupName].filter(Boolean).join(", "),
-              RegionGroup: String(item.RegionGroupID || currentDefaultRegionGroup),
-              Region: item.RegionID ? String(item.RegionID) : undefined,
-              Location: String(item.LocationID),
-            }))
-          );
-        }
-
-        const dedupedSuggestions = nextSuggestions.filter((item, index, arr) => {
-          const key = `${item.kind}:${item.label}:${item.sublabel}`;
-          return arr.findIndex(candidate => `${candidate.kind}:${candidate.label}:${candidate.sublabel}` === key) === index;
-        });
-
-        setSuggestions(dedupedSuggestions.slice(0, 8));
-        setShowSuggestions(isQueryFocused && dedupedSuggestions.length > 0);
+        setSuggestions(nextSuggestions);
+        setShowSuggestions(isQueryFocused && nextSuggestions.length > 0);
       } catch (error: any) {
         if (error?.name !== "AbortError") {
           setSuggestions([]);
@@ -474,8 +386,10 @@ export default function SearchBox({
     params.set("StartDate", startDate);
     params.set("EndDate", endDate);
     params.set("AdultCount", String(adultCount));
-    params.set("ChildCount", String(childCount));
-    params.set("Ages", Array(adultCount).fill(30).concat(Array(childCount).fill(childAge)).join(","));
+    if (childCount > 0) {
+      params.set("ChildCount", String(childCount));
+      params.set("Ages", Array(adultCount).fill(30).concat(Array(childCount).fill(childAge)).join(","));
+    }
     params.set("Page", "0");
 
     if (duration) params.set("Duration", duration);
@@ -490,7 +404,7 @@ export default function SearchBox({
     const codes = getMinimumServiceCodes(minService);
     codes.forEach(c => params.append("ServiceCodes[]", c));
 
-    return params;
+    return sanitizeSearchParams(params);
   }
 
   function buildSearchUrl(target: Awaited<ReturnType<typeof resolveSearchTarget>>) {

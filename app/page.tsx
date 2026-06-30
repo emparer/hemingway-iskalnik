@@ -3,6 +3,7 @@ import SearchBox from "@/components/SearchBox";
 import ProductCard from "@/components/ProductCard";
 import Filters from "@/components/Filters";
 import { searchProducts } from "@/lib/ors";
+import { sanitizeSearchParams } from "@/lib/query-params";
 import Link from "next/link";
 
 export default async function Home({
@@ -91,6 +92,7 @@ export default async function Home({
     for (const [key, val] of Object.entries(updates)) {
         p.set(key, val);
     }
+    sanitizeSearchParams(p);
     return "?" + p.toString();
   }
 

@@ -40,7 +40,7 @@ export default function ProductCard({ item, searchParams = {} }: Props) {
   if (searchParams.type === "hotel") {
     tourType = "Hotel";
   } else if (searchParams.type === "trips") {
-    tourType = "Avtobus";
+    tourType = "Potovanje";
   } else {
     const serviceKeys = Object.keys(item.ServiceTypes || {});
     const roomKeys = Object.keys(item.RoomTypes || {});

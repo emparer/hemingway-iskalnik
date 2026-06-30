@@ -262,7 +262,7 @@ const formatDate = (dateStr: string) => {
               <div className="detail-stat-grid">
                 <div className="detail-stat">
                   <span>Tip poti</span>
-                  <strong>{sp.type === "hotel" ? "Samo namestitev" : sp.type === "trips" ? "Avtobusno potovanje" : "Letalska ponudba"}</strong>
+                  <strong>{sp.type === "hotel" ? "Samo namestitev" : sp.type === "trips" ? "Potovanje" : "Letalska ponudba"}</strong>
                 </div>
                 <div className="detail-stat">
                   <span>Potniki</span>
