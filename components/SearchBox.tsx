@@ -7,6 +7,11 @@ import { buildFallbackSearchTarget, type ResolvedSearchTarget } from "@/lib/sear
 import { getMinimumServiceCodes } from "@/lib/service-codes";
 import { sanitizeSearchParams } from "@/lib/query-params";
 import {
+  getChildAgesFromDefaults,
+  resizeChildAges,
+  serializeTravelerAges,
+} from "@/lib/child-ages";
+import {
   buildQuickSearchSuggestions,
   type QuickSearchLocation,
   type QuickSearchRegion,
@@ -71,18 +76,6 @@ function IsoToSlovenianDate(dateStr: string): string {
   return "";
 }
 
-function parseChildAge(defaultAges: string, adultCount: number): number {
-  if (defaultAges) {
-    const parts = defaultAges.split(",");
-    if (parts.length > adultCount) {
-      return Number(parts[adultCount]) || 8;
-    }
-    const non30 = parts.map(Number).filter(x => x !== 30);
-    if (non30.length > 0) return non30[0];
-  }
-  return 8;
-}
-
 export default function SearchBox({
   defaultQuery = "",
   defaultRegionGroup = "",
@@ -108,7 +101,13 @@ export default function SearchBox({
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [adultCount, setAdultCount] = useState(defaultAdultCount);
   const [childCount, setChildCount] = useState(defaultChildCount);
-  const [childAge, setChildAge] = useState(() => parseChildAge(defaultAges, defaultAdultCount));
+  const [childAges, setChildAges] = useState(() =>
+    getChildAgesFromDefaults({
+      defaultAges,
+      adultCount: defaultAdultCount,
+      childCount: defaultChildCount,
+    })
+  );
   const [duration, setDuration] = useState(defaultDuration);
   const [activeType, setActiveType] = useState(type);
   
@@ -132,7 +131,13 @@ export default function SearchBox({
     setEndDate(defaultEndDate);
     setAdultCount(defaultAdultCount);
     setChildCount(defaultChildCount);
-    setChildAge(parseChildAge(defaultAges, defaultAdultCount));
+    setChildAges(
+      getChildAgesFromDefaults({
+        defaultAges,
+        adultCount: defaultAdultCount,
+        childCount: defaultChildCount,
+      })
+    );
     setAirport(defaultDepartureAirports);
     setActiveType(type);
     setDuration(defaultDuration);
@@ -228,6 +233,19 @@ export default function SearchBox({
       clearTimeout(timeoutId);
     };
   }, [activeType, isQueryFocused, query, selectedSuggestion]);
+
+  function handleChildCountChange(nextCount: number) {
+    setChildCount(nextCount);
+    setChildAges(current => resizeChildAges(current, nextCount));
+  }
+
+  function handleChildAgeChange(index: number, value: string) {
+    setChildAges(current => {
+      const next = resizeChildAges(current, childCount);
+      next[index] = value === "" ? 0 : Number(value);
+      return resizeChildAges(next, childCount);
+    });
+  }
 
   async function resolveSearchTarget(): Promise<ResolvedSearchTarget> {
     const trimmedQuery = query.trim();
@@ -388,7 +406,14 @@ export default function SearchBox({
     params.set("AdultCount", String(adultCount));
     if (childCount > 0) {
       params.set("ChildCount", String(childCount));
-      params.set("Ages", Array(adultCount).fill(30).concat(Array(childCount).fill(childAge)).join(","));
+      params.set(
+        "Ages",
+        serializeTravelerAges({
+          adultCount,
+          childCount,
+          childAges,
+        })
+      );
     }
     params.set("Page", "0");
 
@@ -609,7 +634,7 @@ export default function SearchBox({
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                 <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Otroci</label>
-                <select className="sg-control sg-select" value={childCount} onChange={e => setChildCount(Number(e.target.value))}>
+                <select className="sg-control sg-select" value={childCount} onChange={e => handleChildCountChange(Number(e.target.value))}>
                   {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
@@ -618,16 +643,23 @@ export default function SearchBox({
 
           {childCount > 0 && (
             <div className="sg-field sg-field-child-age">
-              <label>Starost otrok: {childAge} let</label>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "38px" }}>
-                <input
-                  type="range"
-                  min="0"
-                  max="17"
-                  value={childAge}
-                  onChange={e => setChildAge(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: "var(--c)" }}
-                />
+              <label>Starost otrok</label>
+              <div style={{ display: "grid", gap: "8px" }}>
+                {Array.from({ length: childCount }, (_, index) => (
+                  <div key={index} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {`Otrok ${index + 1}`}
+                    </label>
+                    <input
+                      className="sg-control"
+                      type="number"
+                      min={0}
+                      max={17}
+                      value={childAges[index] ?? 0}
+                      onChange={e => handleChildAgeChange(index, e.target.value)}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
