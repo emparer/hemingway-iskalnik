@@ -341,7 +341,7 @@ textarea {
   padding: 10px 16px;
 }
 .search-panel.embed-minimal {
-  padding: 14px 16px;
+  padding: 10px 14px;
 }
 .search-panel.embed-minimal .search-form {
   display: block;
@@ -374,9 +374,9 @@ textarea {
   border-radius: 12px;
 }
 .search-panel.embed-minimal .sg-field-type .sg-select {
-  background: rgba(115, 42, 50, 0.92);
-  color: #fff8f5;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #fff8f5;
+  color: var(--c);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 .search-panel.embed-minimal .sg-field-type .sg-select option {
   color: #201416;
@@ -2346,21 +2346,22 @@ body.embed-route .search-form.mobile-collapsed {
 .search-panel.embed-minimal .sg-select,
 .search-panel.embed-minimal input,
 .search-panel.embed-minimal select {
-  color: #fff8f5 !important;
+  color: var(--c) !important;
 }
 .search-panel.embed-minimal .sg-control::placeholder {
-  color: rgba(255, 248, 245, 0.68);
+  color: rgba(139, 53, 63, 0.62);
 }
 .search-panel.embed-minimal .sg-field-destination .sg-control,
 .search-panel.embed-minimal .sg-field-start-date .sg-control,
 .search-panel.embed-minimal .sg-field-end-date .sg-control {
-  background: rgba(255, 255, 255, 0.12);
+  background: #fff8f5;
   border-color: rgba(255, 255, 255, 0.18);
 }
 .search-panel.embed-minimal .btn-search {
-  background: #fff8f5;
-  color: var(--c);
+  background: var(--c);
+  color: #fff8f5;
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 .search-panel.embed-minimal .btn-search:hover {
-  background: #ffffff;
+  background: #732a32;
 }
