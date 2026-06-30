@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CheckoutExtrasNote from "@/components/CheckoutExtrasNote";
+import { shouldShowFlightInfo } from "@/lib/product-display";
 
 interface Props {
   d: any;
@@ -295,6 +296,12 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
   const serviceName = service.ServiceName || d.ServiceName || "samo prevoz";
   const verifyProd = verified?.OfferInfo?.Products?.[0]?.Product || {};
   const verifyLoc = [verifyProd.Location?.LocationName, verifyProd.Location?.RegionGroupName || verifyProd.Location?.RegionName].filter(Boolean).join(" / ");
+  const showFlightInfo = shouldShowFlightInfo({
+    searchType: type,
+    productType: d.Type || verifyProd.Type,
+    serviceTypes: d.ServiceTypes,
+    roomTypes: d.RoomTypes,
+  });
 
   const offerName = service.OfferName || verifyProd.OfferName || verifyProd.Name || d.ProductName || "Ponudba";
   const location = verifyLoc || [service.LocationName, service.RegionGroupName || service.RegionName].filter(Boolean).join(" / ");
@@ -425,10 +432,10 @@ export default function DateRow({ d, tourOpEnc, hashEnc, qs, adultCount, childCo
               <strong>{service.Type ? `Tip: ${service.Type}` : "Tip ponudbe ni naveden"}</strong>
               <span>Soba: {roomName}</span>
               <span>Storitev: {serviceName}</span>
-              {service.DepartureAirportName && service.ArrivalAirportName && (
+              {showFlightInfo && service.DepartureAirportName && service.ArrivalAirportName && (
                 <span>Relacija: {service.DepartureAirportName} - {service.ArrivalAirportName}</span>
               )}
-              {verified?.OfferInfo?.Dates?.[0]?.EntryPointName && (
+              {showFlightInfo && verified?.OfferInfo?.Dates?.[0]?.EntryPointName && (
                 <span>Vstopno mesto: {verified.OfferInfo.Dates[0].EntryPointName}</span>
               )}
             </div>

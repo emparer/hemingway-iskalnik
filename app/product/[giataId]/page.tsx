@@ -3,6 +3,7 @@ import SearchBox from "@/components/SearchBox";
 import GalleryClient from "@/components/GalleryClient";
 import DatesList from "@/components/DatesList";
 import { searchDates, searchProducts, getProductInfo } from "@/lib/ors";
+import { shouldHideProductDescription, shouldShowFlightInfo } from "@/lib/product-display";
 import { resolveTourOperator } from "@/lib/tour-operator";
 import Link from "next/link";
 
@@ -194,6 +195,13 @@ const formatDate = (dateStr: string) => {
   const galleryPictures = collectGalleryPictures(infoData, prod);
   const ratingColor = rating >= 8 ? "#15803d" : rating >= 6 ? "#d97706" : "#dc2626";
   const ratingBg    = rating >= 8 ? "#f0fdf4"  : rating >= 6 ? "#fefce8"  : "#fef2f2";
+  const hideDescription = shouldHideProductDescription(resolvedTourOperator);
+  const showFlightInfo = shouldShowFlightInfo({
+    searchType: sp.type,
+    productType: prod.Type || matchingItem?.Type,
+    serviceTypes: matchingItem?.ServiceTypes,
+    roomTypes: matchingItem?.RoomTypes,
+  });
 
   function inferMinService(serviceCodes: any): string {
     if (!serviceCodes) return "";
@@ -304,20 +312,26 @@ const formatDate = (dateStr: string) => {
         />
       </section>
 
-      <section className="tabs product-description">
-        <h2 className="product-description-title">Opis ponudbe</h2>
-        {(infoData?.Description || prod.Description || prod.DescriptionSI) ? (
-          <div
-            className="rich-text"
-            dangerouslySetInnerHTML={{ __html: infoData.Description || prod.Description || prod.DescriptionSI || "" }}
-          />
-        ) : (
-          <div className="rich-text">
-            <p><strong>Cena vključuje:</strong> povraten let v izbran kraj, letališke in varnostne pristojbine, 20 kg oddane prtljage, 5 kg ročne prtljage, prigrizek in napitek med poletom, predstavnika agencije v informacijski poslovalnici na letališču.</p>
-            <p className="product-description-note">Opisi objektov so povzeti iz spletnih strani/brošur/informacij s strani partnerjev.</p>
-          </div>
-        )}
-      </section>
+      {!hideDescription && (
+        <section className="tabs product-description">
+          <h2 className="product-description-title">Opis ponudbe</h2>
+          {(infoData?.Description || prod.Description || prod.DescriptionSI) ? (
+            <div
+              className="rich-text"
+              dangerouslySetInnerHTML={{ __html: infoData.Description || prod.Description || prod.DescriptionSI || "" }}
+            />
+          ) : showFlightInfo ? (
+            <div className="rich-text">
+              <p><strong>Cena vključuje:</strong> povraten let v izbran kraj, letališke in varnostne pristojbine, 20 kg oddane prtljage, 5 kg ročne prtljage, prigrizek in napitek med poletom, predstavnika agencije v informacijski poslovalnici na letališču.</p>
+              <p className="product-description-note">Opisi objektov so povzeti iz spletnih strani/brošur/informacij s strani partnerjev.</p>
+            </div>
+          ) : (
+            <div className="rich-text">
+              <p>Opis ponudbe trenutno ni na voljo.</p>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }
