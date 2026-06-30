@@ -29,17 +29,8 @@ export function getChildAgesFromDefaults({
   const normalizedChildCount = Math.max(0, Math.min(4, Math.trunc(childCount)));
   if (normalizedChildCount === 0) return [];
 
-  const normalizedAdultCount = Math.max(0, Math.trunc(adultCount));
-  const hasAdultPlaceholders = raw
-    .slice(0, normalizedAdultCount)
-    .every(age => age === 30);
-
-  const childOnly =
-    raw.length === normalizedChildCount && !hasAdultPlaceholders
-      ? raw
-      : hasAdultPlaceholders
-        ? raw.slice(normalizedAdultCount, normalizedAdultCount + normalizedChildCount)
-        : raw;
+  const firstChildIndex = raw.findIndex(age => age !== 30);
+  const childOnly = firstChildIndex === -1 ? [] : raw.slice(firstChildIndex);
 
   return normalizeChildAges(childOnly, normalizedChildCount);
 }

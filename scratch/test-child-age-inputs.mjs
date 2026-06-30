@@ -40,6 +40,28 @@ test("treats child-only Ages values as child ages", () => {
   );
 });
 
+test("recovers child age from partially adult-prefixed Ages values", () => {
+  assert.deepEqual(
+    getChildAgesFromDefaults({
+      defaultAges: "30,7",
+      adultCount: 2,
+      childCount: 1,
+    }),
+    [7]
+  );
+});
+
+test("recovers child age from malformed adult-prefixed Ages values", () => {
+  assert.deepEqual(
+    getChildAgesFromDefaults({
+      defaultAges: "30,,7",
+      adultCount: 2,
+      childCount: 1,
+    }),
+    [7]
+  );
+});
+
 test("resizes child ages with zero defaults for newly added children", () => {
   assert.deepEqual(resizeChildAges([6], 3), [6, 0, 0]);
 });
