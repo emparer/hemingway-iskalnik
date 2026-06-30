@@ -35,6 +35,7 @@ interface Props {
   defaultMinService?: string;
   defaultMinCategory?: string;
   defaultSubType?: string;
+  variant?: "default" | "embed-minimal";
 }
 
 interface QuickSearchProduct {
@@ -93,6 +94,7 @@ export default function SearchBox({
   defaultMinService = "",
   defaultMinCategory = "",
   defaultSubType = "",
+  variant = "default",
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -122,6 +124,7 @@ export default function SearchBox({
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isQueryFocused, setIsQueryFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(true);
+  const isEmbedMinimal = variant === "embed-minimal";
 
   const ignoreNextQueryEffectRef = useRef(false);
 
@@ -472,31 +475,50 @@ export default function SearchBox({
   ];
 
   return (
-    <section className={`search-panel ${compact ? "compact" : ""}`}>
-      <div className="search-type-tabs">
-        {typeOptions.map(opt => (
-          <button
-            key={opt.value}
-            type="button"
-            className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
-            onClick={() => {
-              setActiveType(opt.value);
-            }}
+    <section className={`search-panel ${compact ? "compact" : ""}${isEmbedMinimal ? " embed-minimal" : ""}`}>
+      {isEmbedMinimal ? (
+        <div className="sg-field sg-field-type">
+          <label>Tip ponudbe</label>
+          <select
+            className="sg-control sg-select"
+            value={activeType}
+            onChange={e => setActiveType(e.target.value)}
           >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+            {typeOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div className="search-type-tabs">
+          {typeOptions.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
+              onClick={() => {
+                setActiveType(opt.value);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <button
-        type="button"
-        className="search-mobile-toggle"
-        onClick={() => setIsMobileSearchOpen(current => !current)}
-        aria-expanded={isMobileSearchOpen}
-      >
-        <span>{isMobileSearchOpen ? "Skrij iskalnik" : "Prikaži iskalnik"}</span>
-        <span className={`search-mobile-toggle-icon${isMobileSearchOpen ? " open" : ""}`}>⌄</span>
-      </button>
+      {!isEmbedMinimal && (
+        <button
+          type="button"
+          className="search-mobile-toggle"
+          onClick={() => setIsMobileSearchOpen(current => !current)}
+          aria-expanded={isMobileSearchOpen}
+        >
+          <span>{isMobileSearchOpen ? "Skrij iskalnik" : "Prikaži iskalnik"}</span>
+          <span className={`search-mobile-toggle-icon${isMobileSearchOpen ? " open" : ""}`}>⌄</span>
+        </button>
+      )}
 
       <form onSubmit={handleSearch} className={`search-form${isMobileSearchOpen ? "" : " mobile-collapsed"}`}>
         <div className="search-grid">
@@ -599,18 +621,20 @@ export default function SearchBox({
               onChange={e => setEndDate(IsoToSlovenianDate(e.target.value))}
             />
           </div>
-          <div className="sg-field sg-field-duration">
-            <label>Trajanje</label>
-            <select className="sg-control sg-select" value={duration} onChange={e => setDuration(e.target.value)}>
-              <option value="">Izberite</option>
-              <option value="2-6">2-6 dni</option>
-              <option value="7-9">7-9 dni</option>
-              <option value="9-15">9-15 dni</option>
-              <option value="15-99">Več kot 15 dni</option>
-            </select>
-          </div>
+          {!isEmbedMinimal && (
+            <div className="sg-field sg-field-duration">
+              <label>Trajanje</label>
+              <select className="sg-control sg-select" value={duration} onChange={e => setDuration(e.target.value)}>
+                <option value="">Izberite</option>
+                <option value="2-6">2-6 dni</option>
+                <option value="7-9">7-9 dni</option>
+                <option value="9-15">9-15 dni</option>
+                <option value="15-99">Več kot 15 dni</option>
+              </select>
+            </div>
+          )}
 
-          {activeType === "pauschal" && (
+          {!isEmbedMinimal && activeType === "pauschal" && (
             <div className="sg-field sg-field-airport">
               <label>Letališče</label>
               <select className="sg-control sg-select" value={airport} onChange={e => setAirport(e.target.value)}>
@@ -624,24 +648,26 @@ export default function SearchBox({
             </div>
           )}
 
-          <div className="sg-field sg-field-adults">
-            <div style={{ display: "flex", gap: "8px" }}>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Odrasli</label>
-                <select className="sg-control sg-select" value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
-                  {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Otroci</label>
-                <select className="sg-control sg-select" value={childCount} onChange={e => handleChildCountChange(Number(e.target.value))}>
-                  {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
-                </select>
+          {!isEmbedMinimal && (
+            <div className="sg-field sg-field-adults">
+              <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Odrasli</label>
+                  <select className="sg-control sg-select" value={adultCount} onChange={e => setAdultCount(Number(e.target.value))}>
+                    {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <label style={{ fontSize: "11px", marginBottom: "4px", color: "var(--muted)" }}>Otroci</label>
+                  <select className="sg-control sg-select" value={childCount} onChange={e => handleChildCountChange(Number(e.target.value))}>
+                    {[0, 1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {childCount > 0 && (
+          {!isEmbedMinimal && childCount > 0 && (
             <div className="sg-field sg-field-child-age">
               <label>Starost otrok</label>
               <div style={{ display: "grid", gap: "8px" }}>
@@ -664,7 +690,7 @@ export default function SearchBox({
             </div>
           )}
 
-          {(activeType === "pauschal" || activeType === "hotel") && (
+          {!isEmbedMinimal && (activeType === "pauschal" || activeType === "hotel") && (
             <>
               <div className="sg-field sg-field-service">
                 <label>Storitev</label>
@@ -688,7 +714,7 @@ export default function SearchBox({
             </>
           )}
 
-          {activeType === "trips" && (
+          {!isEmbedMinimal && activeType === "trips" && (
             <div className="sg-field sg-field-subtype">
               <label>Tip potovanja</label>
               <select className="sg-control sg-select" value={subType} onChange={e => setSubType(e.target.value)}>

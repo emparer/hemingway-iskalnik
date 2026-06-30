@@ -36,6 +36,7 @@ export default async function EmbedSearchPage({
       <IframeResizer />
       <SearchBox
         compact
+        variant="embed-minimal"
         submitMode="external"
         externalBaseUrl={canonicalBaseUrl}
         defaultQuery={pickParam(sp.query, "")}

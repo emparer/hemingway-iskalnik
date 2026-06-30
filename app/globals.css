@@ -340,6 +340,24 @@ textarea {
   min-height: 42px;
   padding: 10px 16px;
 }
+.search-panel.embed-minimal {
+  padding: 18px;
+}
+.search-panel.embed-minimal .search-form {
+  display: block;
+}
+.search-panel.embed-minimal .search-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.search-panel.embed-minimal .sg-field {
+  min-width: 0;
+}
+.search-panel.embed-minimal .btn-search {
+  width: 100%;
+  min-height: 44px;
+}
 
 .search-panel::before,
 .search-panel::after {
