@@ -2318,3 +2318,49 @@ body.embed-route .search-form.mobile-collapsed {
   border-color: var(--c);
   box-shadow: 0 4px 12px rgba(139, 53, 63, 0.16);
 }
+
+/* Force the iframe-only minimal search to stay on a single compact row */
+.search-panel.embed-minimal .search-grid {
+  grid-template-columns:
+    minmax(150px, 0.95fr)
+    minmax(260px, 1.9fr)
+    minmax(150px, 1fr)
+    minmax(150px, 1fr)
+    minmax(140px, 0.8fr) !important;
+  gap: 10px !important;
+  align-items: end !important;
+}
+.search-panel.embed-minimal .sg-field-type { grid-column: 1; grid-row: 1; }
+.search-panel.embed-minimal .sg-field-destination { grid-column: 2; grid-row: 1; }
+.search-panel.embed-minimal .sg-field-start-date { grid-column: 3; grid-row: 1; }
+.search-panel.embed-minimal .sg-field-end-date { grid-column: 4; grid-row: 1; }
+.search-panel.embed-minimal .search-grid > .btn-search {
+  grid-column: 5 !important;
+  grid-row: 1 !important;
+  align-self: end;
+}
+.search-panel.embed-minimal label {
+  color: rgba(255, 248, 245, 0.94) !important;
+}
+.search-panel.embed-minimal .sg-control,
+.search-panel.embed-minimal .sg-select,
+.search-panel.embed-minimal input,
+.search-panel.embed-minimal select {
+  color: #fff8f5 !important;
+}
+.search-panel.embed-minimal .sg-control::placeholder {
+  color: rgba(255, 248, 245, 0.68);
+}
+.search-panel.embed-minimal .sg-field-destination .sg-control,
+.search-panel.embed-minimal .sg-field-start-date .sg-control,
+.search-panel.embed-minimal .sg-field-end-date .sg-control {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.search-panel.embed-minimal .btn-search {
+  background: #fff8f5;
+  color: var(--c);
+}
+.search-panel.embed-minimal .btn-search:hover {
+  background: #ffffff;
+}
