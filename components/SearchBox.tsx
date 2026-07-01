@@ -476,22 +476,20 @@ export default function SearchBox({
 
   return (
     <section className={`search-panel ${compact ? "compact" : ""}${isEmbedMinimal ? " embed-minimal" : ""}`}>
-      {!isEmbedMinimal && (
-        <div className="search-type-tabs">
-          {typeOptions.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
-              onClick={() => {
-                setActiveType(opt.value);
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="search-type-tabs">
+        {typeOptions.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            className={`search-type-tab ${activeType === opt.value ? "active" : ""}`}
+            onClick={() => {
+              setActiveType(opt.value);
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
 
       {!isEmbedMinimal && (
         <button
@@ -507,22 +505,6 @@ export default function SearchBox({
 
       <form onSubmit={handleSearch} className={`search-form${isMobileSearchOpen ? "" : " mobile-collapsed"}`}>
         <div className="search-grid">
-          {isEmbedMinimal && (
-            <div className="sg-field sg-field-type">
-              <label>Tip ponudbe</label>
-              <select
-                className="sg-control sg-select"
-                value={activeType}
-                onChange={e => setActiveType(e.target.value)}
-              >
-                {typeOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
           <div className="sg-field sg-field-destination">
             <label>Destinacija ali kraj</label>
             <div className="search-autocomplete">
@@ -671,14 +653,12 @@ export default function SearchBox({
           {!isEmbedMinimal && childCount > 0 && (
             <div className="sg-field sg-field-child-age">
               <label>Starost otrok</label>
-              <div style={{ display: "grid", gap: "8px" }}>
+              <div className="child-age-row">
                 {Array.from({ length: childCount }, (_, index) => (
-                  <div key={index} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "11px", color: "var(--muted)" }}>
-                      {`Otrok ${index + 1}`}
-                    </label>
+                  <div key={index} className="child-age-item">
+                    <label className="child-age-item-label">{`Otrok ${index + 1}`}</label>
                     <input
-                      className="sg-control"
+                      className="sg-control child-age-input"
                       type="number"
                       min={0}
                       max={17}
